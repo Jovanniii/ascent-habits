@@ -25,7 +25,6 @@ export default defineConfig({
         start_url: base,
         scope: base,
         display: 'standalone',
-        orientation: 'portrait',
         background_color: '#f6f7f9',
         theme_color: '#2f3b4c',
         icons: [
@@ -44,8 +43,10 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     restoreMocks: true,
     coverage: {
+      // La couverture vise la logique métier et le stockage, testés unitairement.
       include: ['src/engine/**', 'src/storage/**'],
-      exclude: ['**/*.test.ts'],
+      exclude: ['**/*.test.ts', '**/testing/**', '**/index.ts'],
+      thresholds: { lines: 95, branches: 85 },
     },
   },
 })
