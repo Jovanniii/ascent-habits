@@ -1,0 +1,56 @@
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist', 'dev-dist', 'coverage']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2023,
+      globals: globals.browser,
+    },
+  },
+  {
+    files: ['*.config.{js,ts}'],
+    languageOptions: { globals: globals.node },
+  },
+  {
+    // Le moteur reste pur : aucune dépendance à l'interface, au stockage, aux thèmes
+    // ni aux API du navigateur. C'est ce qui permet de le tester et de changer d'habillage.
+    files: ['src/engine/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^react(-dom)?(/.*)?$',
+              message: 'Le moteur ne doit pas dépendre de React.',
+            },
+            {
+              regex: '(^|/)(ui|storage|themes)(/|$)',
+              message: "Le moteur ne doit dépendre ni de l'interface, ni du stockage, ni des thèmes.",
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        { name: 'window', message: 'Le moteur ne doit pas utiliser les API du navigateur.' },
+        { name: 'document', message: 'Le moteur ne doit pas utiliser les API du navigateur.' },
+        { name: 'localStorage', message: 'Le stockage passe par src/storage.' },
+        { name: 'navigator', message: 'Le moteur ne doit pas utiliser les API du navigateur.' },
+      ],
+    },
+  },
+])
