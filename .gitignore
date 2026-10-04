@@ -1,0 +1,24 @@
+# Journaux
+logs
+*.log
+npm-debug.log*
+
+# Dépendances et sorties de build
+node_modules
+dist
+dist-ssr
+dev-dist
+coverage
+*.local
+
+# Variables d'environnement (ne jamais versionner de secrets)
+.env
+.env.*
+
+# Éditeurs et systèmes
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.sw?
