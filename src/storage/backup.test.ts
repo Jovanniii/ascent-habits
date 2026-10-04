@@ -32,6 +32,12 @@ describe('parseBackup', () => {
     expect(result).toEqual({ ok: true, data, exportedAt: NOW })
   })
 
+  it("ignore une date d'export illisible", () => {
+    const backup = JSON.parse(serializeBackup(createBackup(sampleAppData(), NOW)))
+    backup.exportedAt = 'hier'
+    expect(parseBackup(JSON.stringify(backup))).toMatchObject({ ok: true, exportedAt: null })
+  })
+
   it("refuse un fichier qui n'est pas du JSON", () => {
     expect(parseBackup('bonjour')).toMatchObject({ ok: false, message: expect.stringMatching(/JSON/) })
   })

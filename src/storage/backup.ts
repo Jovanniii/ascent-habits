@@ -45,7 +45,7 @@ export function parseBackup(text: string): BackupParseResult {
     return {
       ok: true,
       data: parseAppData(data),
-      exportedAt: typeof exportedAt === 'string' ? exportedAt : null,
+      exportedAt: typeof exportedAt === 'string' && !Number.isNaN(Date.parse(exportedAt)) ? exportedAt : null,
     }
   } catch (error) {
     if (error instanceof DataValidationError) {
