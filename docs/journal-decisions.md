@@ -60,6 +60,7 @@ Les décisions déjà actées dans les docs 06 et 07 restent valables : stockage
   - Masquer la série actuelle après une rupture : on perd une information utile.
 - **Raison :** aucune pénalité visuelle, tout en gardant une information honnête sur la série en cours.
 - **Précisée par D17 :** le décor peut redescendre, mais uniquement quand l'utilisateur corrige son historique.
+- **Précisée par D18 et D20 :** l'alpiniste peut revenir au dernier camp atteint (jamais au pied), et le palier n'est plus exposé par `data-highest-tier` mais par les données neutres transmises au thème.
 
 ### D5. Changement de fréquence d'une habitude
 
@@ -175,6 +176,73 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 - **Alternative écartée :** mémoriser le plus haut palier atteint dans chaque habitude. Cela demande un nouveau champ, une version 2 du schéma, une migration et l'adaptation de la validation et des sauvegardes.
 - **Raison :** **dette assumée**, plutôt qu'une migration du schéma au MVP. Ces corrections sont volontaires et rares ; elles ne sont pas vécues comme une pénalité.
 - **À rouvrir si :** les retours bêta montrent que ces baisses surprennent ou déçoivent.
+
+---
+
+## Itération 2 : thème montagne, visuels provisoires (octobre 2026)
+
+### D18. Position de l'alpiniste
+
+- **Décision :**
+  - Le sentier va du pied au sommet en passant par les camps 21 jours, 60 jours et 180 jours ; le sommet correspond à 365 jours. Les camps sont régulièrement espacés et la position est interpolée en jours entre deux camps.
+  - Le **décor** correspond au plus haut palier jamais atteint.
+  - L'alpiniste se place selon la **progression de la série actuelle vers le prochain palier**.
+  - **Si la série se brise, il revient au dernier camp atteint**, jamais au pied. Avec la nouvelle série, il **repart de ce camp vers le camp suivant, au prorata de la nouvelle série** : position = camp + (camp suivant − camp) × série / camp suivant. Il atteint le camp suivant exactement quand la série atteint le palier correspondant, sans saut ensuite.
+  - Le texte « Prochain palier » vise le même camp que l'image, dans les deux thèmes : après une rupture, un palier déjà acquis n'est plus présenté comme « prochain ».
+  - **Au-delà d'un an :** 365 jours = sommet (avec célébration) ; 366 jours = pied d'une nouvelle montagne plus haute, dont le sommet compte aussi comme camp (730, 1 095 jours…). La hauteur visuelle est plafonnée.
+  - Calcul : fonctions pures `computeHabitProgress` et `deriveHabitProgress` (`src/themes/progress.ts`), sans modification du moteur, testées (série à zéro, entre deux paliers, palier atteint, saut de durée, rupture après palier, reprise, 365/366/730 jours, propriétés de non-recul).
+- **Alternatives écartées :**
+  - **Retour au pied de la montagne** après une rupture : vécu comme une pénalité, contraire au positionnement et à D4.
+  - **Immobilité au camp** jusqu'à ce que la nouvelle série dépasse ce camp (règle « max(série, camp) ») : après une rupture au-delà de 6 mois, l'alpiniste ne bougeait plus pendant des mois, même en cochant chaque jour (contraire à US-04).
+- **Raison :** l'alpiniste bouge à chaque coche, ne recule jamais sous ce qui a été acquis, et l'image reste cohérente avec les paliers du moteur.
+- **À vérifier en bêta :** les utilisateurs comprennent-ils l'alpiniste sans explication ?
+
+### D19. Jour manqué encore rattrapable : bivouac à la même altitude
+
+- **Décision :** tant que le jour manqué peut être rattrapé, l'alpiniste garde l'altitude qu'il aurait si le rattrapage était fait, en pose « bivouac » (corde provisoire). La série affichée en texte reste la série réelle.
+- **Alternative écartée :** redescendre au camp dès le lendemain d'un oubli, puis remonter d'un coup après le rattrapage.
+- **Raison :** pas de chute visuelle au moment le plus sensible ; Doc 07 prévoit un état « récupération ».
+
+### D20. Contrat de thème : l'interface garde le bouton, le thème dessine
+
+- **Décision :**
+  - L'interface garde tout ce qui est interactif et textuel : bouton de coche (un toucher, clavier, `aria-pressed`, libellé), série, paliers, rattrapage.
+  - Un thème peut fournir une illustration **décorative** (`HabitScene`, `aria-hidden`), affichée dans le bouton de coche, à partir de données neutres (`HabitProgress`, geste en cours, animations permises).
+  - La logique de progression, neutre, vit dans `src/themes/progress.ts` et resservira aux futurs thèmes.
+  - Les thèmes sont découverts automatiquement (`src/themes/<id>/theme.ts`) ; c'est le thème qui se déclare par défaut (`isDefault`).
+  - Isolation vérifiée : règles ESLint (un thème n'importe ni l'interface, ni le stockage, ni le registre ; l'interface n'importe que `src/themes/index.ts`) et test garde-fou (aucun vocabulaire montagne hors de `src/themes/mountain/`, CSS compris).
+- **Alternative écartée :** confier au thème le bouton et ses textes. Chaque thème aurait dû réimplémenter l'accessibilité, et les tests seraient devenus dépendants du thème.
+- **Raison :** accessibilité et rapidité de coche identiques quel que soit le thème ; un nouveau thème n'a que du décor à fournir.
+
+### D21. Thème par défaut
+
+- **Décision :** les nouvelles installations démarrent avec le thème montagne. Les données existantes gardent leur thème (« Sobre ») ; le changement se fait dans Réglages → Thème.
+- **Alternative écartée :** basculer automatiquement les données existantes vers la montagne (migration).
+- **Raison :** respecter le réglage enregistré, sans migration du schéma.
+
+### D22. Animations
+
+- **Décision :**
+  - Seuls les gestes de l'utilisateur sont animés : un pas court à la coche (montée), une petite descente à l'annulation, un petit saut à la célébration. Rien au chargement, à minuit ni au changement d'onglet.
+  - Une respiration discrète, seulement au repos (une seule animation à la fois, boucles décalées d'une habitude à l'autre).
+  - Animations en « opt-in » : coupées si le réglage de l'application est désactivé **ou** si l'appareil demande de réduire les animations, réglage suivi en direct. Aucune animation SMIL, aucun filtre SVG.
+- **Alternative écartée :** animer le déplacement réel de l'alpiniste. Après deux mois, une coche le déplace de moins d'un pixel : l'animation aurait été invisible.
+- **Raison :** un retour visible à chaque coche, sobre et respectueux des préférences.
+
+### D23. Célébration
+
+- **Décision :** l'alpiniste célèbre, et un message positif est annoncé, seulement quand la coche du jour fait atteindre une étape **jamais atteinte jusque-là** (palier ou sommet). Repasser un palier déjà acquis ou recoller deux séries par un rattrapage ne déclenche pas de célébration.
+- **Alternative écartée :** célébrer chaque passage d'un palier, y compris après une rupture.
+- **Raison :** la célébration marque un vrai progrès ; le décor ne change d'ailleurs pas dans les autres cas.
+
+### D24. Mise en page, contrastes et reports
+
+- **Décision :**
+  - Panorama de 76 px, nom et série sur une ligne, paliers sur une ligne (version complète lue par les lecteurs d'écran), pastille ✓ visible : au moins 3 habitudes visibles en 360 × 640 et 4 en 390 × 844.
+  - Accent rouge orangé réservé à l'alpiniste, à la flamme et au drapeau du sommet, posés sur un halo couleur neige (contraste d'au moins 3:1). Les jetons d'interface du thème n'utilisent jamais l'accent.
+  - **Provisoire :** mode sombre = nuit, en attendant le cycle jour/nuit selon l'heure.
+  - **Reportés :** police Nunito, cycle jour/nuit, nuages et parallaxe, départ animé vers la nouvelle montagne, tâches en obstacles, objectifs en sommet lointain, calendrier de réalisations, choix du thème au démarrage (US-02), couleurs du manifeste PWA selon le thème.
+- **Raison :** visuels provisoires pour tester l'univers ; l'effort ira au thème final après les retours.
 
 ---
 
