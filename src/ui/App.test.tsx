@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createEmptyAppData, type AppData, type Completion } from '../engine/index.ts'
 import { StoredDataError, createBackup, createMemoryRepository, serializeBackup } from '../storage/index.ts'
+import { THEMES } from '../themes/index.ts'
 import { App } from './App.tsx'
 import { downloadTextFile } from './download.ts'
 
@@ -56,7 +57,7 @@ describe('habitudes', () => {
     await user.click(screen.getByRole('button', { name: 'Créer l’habitude' }))
 
     const card = screen.getByRole('heading', { name: 'Lire 10 pages' }).closest('li')!
-    expect(within(card).getByText('Série actuelle')).toBeInTheDocument()
+    expect(within(card).getByText(/Série actuelle/)).toBeInTheDocument()
     expect(within(card).getByText('0 validation')).toBeInTheDocument()
 
     const check = within(card).getByRole('button', { name: 'Valider « Lire 10 pages » pour aujourd\'hui' })
@@ -109,7 +110,8 @@ describe('habitudes', () => {
     )
     expect(screen.getByText('3 validations')).toBeInTheDocument()
     expect(screen.getByText('Plus haut palier atteint : 21 jours')).toBeInTheDocument()
-    expect(screen.getByText('Prochain palier : 21 jours, encore 18 jours')).toBeInTheDocument()
+    // Le palier de 21 jours est déjà acquis : le prochain palier visé est 2 mois (D18).
+    expect(screen.getByText('Prochain palier : 2 mois, encore 57 jours')).toBeInTheDocument()
   })
 
   it('demande confirmation avant un changement de fréquence', async () => {
@@ -283,6 +285,26 @@ describe('objectifs', () => {
 })
 
 describe('réglages', () => {
+  it('change de thème sans changer le geste de coche ni les textes', async () => {
+    const { user } = await renderApp(dataWith({ habits: [readingHabit], completions: daily('2026-09-20', '2026-10-03') }))
+    for (const theme of THEMES) {
+      await user.click(screen.getByRole('button', { name: 'Réglages' }))
+      await user.selectOptions(screen.getByLabelText('Thème'), theme.name)
+      expect(document.documentElement.dataset.theme).toBe(theme.id)
+      await user.click(screen.getByRole('button', { name: 'Aujourd’hui' }))
+
+      const check = screen.getByRole('button', { name: "Valider « Lire » pour aujourd'hui" })
+      expect(screen.getByText('14 validations')).toBeInTheDocument()
+      // Le thème illustré dessine dans le bouton, sans élément interactif imbriqué.
+      expect(check.querySelector('button, a, input')).toBeNull()
+      await user.click(check)
+      expect(check).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByText('15 validations')).toBeInTheDocument()
+      await user.click(check)
+      expect(check).toHaveAttribute('aria-pressed', 'false')
+    }
+  })
+
   it('désactive les animations', async () => {
     const { user } = await renderApp()
     expect(document.documentElement.dataset.motion).toBe('full')

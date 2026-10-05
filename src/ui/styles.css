@@ -40,6 +40,17 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* Le réglage de l'appareil s'applique aussi, à tout moment. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 h1,
 h2,
 h3,
@@ -490,6 +501,125 @@ main.screen {
 .tier-badge {
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+/* Habitude illustrée par le thème : le panorama est le bouton de coche. */
+
+.habit--scene {
+  gap: 0;
+  padding: 0;
+}
+
+.habit-scene {
+  position: relative;
+}
+
+.habit-scene__toggle {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 76px;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  overflow: hidden;
+  background: var(--color-surface-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.habit-scene__toggle:focus-visible {
+  outline-offset: -3px;
+}
+
+.habit-scene__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: transparent;
+}
+
+.habit-scene__badge .check__icon {
+  width: 20px;
+  height: 20px;
+}
+
+.habit-scene__toggle[aria-pressed='true'] .habit-scene__badge {
+  border-color: var(--color-done);
+  background: var(--color-done);
+  color: var(--color-on-done);
+}
+
+.habit-scene__menu {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+
+.habit-scene__menu svg {
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  opacity: 0.85;
+}
+
+.habit__line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px 0;
+}
+
+.habit--scene .habit__name {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.streak--compact {
+  flex-shrink: 0;
+  padding: 1px 10px;
+  font-size: 0.875rem;
+}
+
+.habit__tiers {
+  overflow: hidden;
+  padding: 0 12px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.habit--scene > .button--small,
+.habit--scene > .habit__recovery {
+  margin: 0 12px 12px;
+}
+
+@media (forced-colors: active) {
+  .habit-scene__toggle {
+    border: 1px solid CanvasText;
+  }
+
+  .habit-scene__toggle[aria-pressed='true'] .habit-scene__badge {
+    border-color: CanvasText;
+    color: CanvasText;
+  }
 }
 
 /* Tâches et jalons */

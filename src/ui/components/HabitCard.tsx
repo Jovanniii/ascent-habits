@@ -1,95 +1,179 @@
-import { useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import {
   cancelRecovery,
   computeStreak,
-  computeTierProgress,
   getRecoveryState,
   recoverMissedDay,
   resumeHabit,
   toggleHabitToday,
   type Habit,
 } from '../../engine/index.ts'
-import { TIER_LABELS, capitalize, formatFrequency, formatMissedDay, formatValidations, plural } from '../format.ts'
+import { deriveHabitProgress, getTheme, type HabitGesture, type HabitProgress } from '../../themes/index.ts'
+import { TIER_LABELS, capitalize, formatFrequency, formatMissedDay, formatStage, formatValidations, plural } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
+import { useMotionAllowed } from '../state/useMotionAllowed.ts'
 import { HabitManageDialog } from './HabitManageDialog.tsx'
 
 interface Props {
   habit: Habit
+  /**
+   * « today » : habitude à cocher aujourd'hui, illustrée si le thème le propose.
+   * « compact » : habitude non prévue aujourd'hui, en pause ou archivée.
+   */
+  variant?: 'today' | 'compact'
+  /** Rang dans la liste (décalage des animations d'un thème). */
+  index?: number
 }
 
-export function HabitCard({ habit }: Props) {
+/** Durée pendant laquelle un geste reste « en cours » pour l'animation. */
+const GESTURE_DURATION_MS = 1200
+let gestureCounter = 0
+
+/** Prochain palier visé, cohérent avec la position affichée par le thème. */
+function nextStageText(progress: HabitProgress): string {
+  return `Prochain palier : ${formatStage(progress.next)}, encore ${plural(progress.next.daysRemaining, 'jour')}`
+}
+
+/** Version courte sur une ligne, pour la carte illustrée (la version complète est lue par les lecteurs d'écran). */
+function compactTiersText(progress: HabitProgress): string {
+  const next = `${formatStage(progress.next)} dans ${progress.next.daysRemaining} j`
+  return progress.decorTier ? `Palier ${TIER_LABELS[progress.decorTier.id]} · prochain ${next}` : `Prochain palier ${next}`
+}
+
+export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
   const { data, today, run } = useAppStore()
   const [managing, setManaging] = useState(false)
+  const [gesture, setGesture] = useState<HabitGesture | null>(null)
+  const { allowed: motionAllowed } = useMotionAllowed(data.settings.animationsEnabled)
+  const summaryId = useId()
+
+  useEffect(() => {
+    if (!gesture) return
+    const timer = setTimeout(() => setGesture(null), GESTURE_DURATION_MS)
+    return () => clearTimeout(timer)
+  }, [gesture])
 
   const streak = computeStreak(habit, data.completions, today)
-  const tiers = computeTierProgress(streak)
+  const progress = deriveHabitProgress(habit, data.completions, today)
   const recovery = getRecoveryState(habit, data.completions, today)
   const canCheck = habit.status === 'active' && streak.today !== 'unscheduled'
   const done = streak.today === 'done'
+  const HabitScene = variant === 'today' && canCheck ? getTheme(data.settings.themeId).HabitScene : undefined
+
+  const toggle = () => {
+    const checking = !done
+    // Un palier atteint grâce à cette coche est annoncé, avec un message positif.
+    let feedback: string | undefined
+    if (checking) {
+      const after = deriveHabitProgress(
+        habit,
+        [...data.completions, { habitId: habit.id, date: today, kind: 'normal' }],
+        today,
+      ).actual
+      if (after.celebrated) {
+        feedback = `Nouveau palier atteint pour « ${habit.name} » : ${formatStage(after.celebrated)}. Bravo !`
+      }
+    }
+    if (run((d, ctx) => toggleHabitToday(d, habit.id, ctx), feedback)) {
+      gestureCounter += 1
+      setGesture({ kind: checking ? 'checked' : 'unchecked', id: gestureCounter })
+    }
+  }
+
+  const checkLabel = `Valider « ${habit.name} » pour aujourd'hui`
+  const menuButton = (
+    <button
+      type="button"
+      className={`icon-button${HabitScene ? ' habit-scene__menu' : ''}`}
+      aria-label={`Gérer « ${habit.name} »`}
+      onClick={() => setManaging(true)}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="5" cy="12" r="2" />
+        <circle cx="12" cy="12" r="2" />
+        <circle cx="19" cy="12" r="2" />
+      </svg>
+    </button>
+  )
+  const highestText = progress.actual.decorTier
+    ? `Plus haut palier atteint : ${TIER_LABELS[progress.actual.decorTier.id]}`
+    : null
 
   return (
     <li
-      className="card habit"
+      className={`card habit${HabitScene ? ' habit--scene' : ''}`}
       data-status={habit.status}
       data-today={streak.today}
-      // Repères pour le futur thème illustré : décor du plus haut palier atteint.
-      data-highest-tier={tiers.highest?.id ?? 'none'}
     >
-      <div className="habit__header">
-        {canCheck ? (
-          <button
-            type="button"
-            className="check"
-            aria-pressed={done}
-            aria-label={`Valider « ${habit.name} » pour aujourd'hui`}
-            onClick={() => run((d, ctx) => toggleHabitToday(d, habit.id, ctx))}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="check__icon">
-              <path d="M5 12.5l4.5 4.5L19 7.5" />
-            </svg>
-          </button>
-        ) : (
-          <span className="check check--placeholder" aria-hidden="true" />
-        )}
-        <div className="habit__titles">
-          <h3 className="habit__name">{habit.name}</h3>
-          <p className="habit__meta">
-            {habit.status === 'paused' ? 'En pause' : formatFrequency(habit.frequency)}
-            {habit.status === 'active' && streak.today === 'unscheduled' && ' · pas prévue aujourd’hui'}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label={`Gérer « ${habit.name} »`}
-          onClick={() => setManaging(true)}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="5" cy="12" r="2" />
-            <circle cx="12" cy="12" r="2" />
-            <circle cx="19" cy="12" r="2" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="habit__progress">
-        <p className="streak">
-          <span className="streak__label">Série actuelle</span>
-          <span className="streak__value">{formatValidations(streak.current)}</span>
-        </p>
-        <div className="tiers">
-          {tiers.highest && (
-            <p className="tier-badge" data-tier={tiers.highest.id}>
-              Plus haut palier atteint : {TIER_LABELS[tiers.highest.id]}
+      {HabitScene ? (
+        <>
+          <div className="habit-scene">
+            <button
+              type="button"
+              className="habit-scene__toggle"
+              aria-pressed={done}
+              aria-label={checkLabel}
+              aria-describedby={summaryId}
+              onClick={toggle}
+            >
+              <HabitScene progress={progress.visual} gesture={gesture} motionAllowed={motionAllowed} index={index} />
+              <span className="habit-scene__badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="check__icon">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
+              </span>
+            </button>
+            {menuButton}
+          </div>
+          <div className="habit__line">
+            <h3 className="habit__name">{habit.name}</h3>
+            <p className="streak streak--compact">
+              <span className="visually-hidden">Série actuelle : </span>
+              <span className="streak__value">{formatValidations(streak.current)}</span>
             </p>
-          )}
-          <p className="tiers__next">
-            {tiers.next && tiers.daysToNext !== null
-              ? `Prochain palier : ${TIER_LABELS[tiers.next.id]}, encore ${plural(tiers.daysToNext, 'jour')}`
-              : 'Tous les paliers sont atteints, l’habitude continue.'}
+          </div>
+          <p id={summaryId} className="habit__tiers">
+            <span aria-hidden="true">{compactTiersText(progress.actual)}</span>
+            <span className="visually-hidden">
+              {highestText && `${highestText}. `}
+              {nextStageText(progress.actual)}.
+            </span>
           </p>
-        </div>
-      </div>
+        </>
+      ) : (
+        <>
+          <div className="habit__header">
+            {canCheck ? (
+              <button type="button" className="check" aria-pressed={done} aria-label={checkLabel} onClick={toggle}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="check__icon">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
+              </button>
+            ) : (
+              <span className="check check--placeholder" aria-hidden="true" />
+            )}
+            <div className="habit__titles">
+              <h3 className="habit__name">{habit.name}</h3>
+              <p className="habit__meta">
+                {habit.status === 'paused' ? 'En pause' : formatFrequency(habit.frequency)}
+                {habit.status === 'active' && streak.today === 'unscheduled' && ' · pas prévue aujourd’hui'}
+              </p>
+            </div>
+            {menuButton}
+          </div>
+
+          <div className="habit__progress">
+            <p className="streak">
+              <span className="streak__label">Série actuelle</span>
+              <span className="streak__value">{formatValidations(streak.current)}</span>
+            </p>
+            <div className="tiers">
+              {highestText && <p className="tier-badge">{highestText}</p>}
+              <p className="tiers__next">{nextStageText(progress.actual)}</p>
+            </div>
+          </div>
+        </>
+      )}
 
       {recovery.status === 'available' && (
         <button

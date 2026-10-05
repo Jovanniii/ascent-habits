@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   formatDueDate,
   formatFrequency,
+  formatStage,
   formatLongDate,
   formatMissedDay,
   formatValidations,
@@ -26,6 +27,12 @@ describe('format', () => {
   it('nomme le jour à rattraper', () => {
     expect(formatMissedDay('2026-09-30', '2026-10-01')).toBe('mercredi')
     expect(formatMissedDay('2026-10-02', '2026-10-05')).toBe('ven. 2 oct.')
+  })
+
+  it('nomme les étapes du parcours', () => {
+    expect(formatStage({ tierId: 'months2', days: 60 })).toBe('2 mois')
+    expect(formatStage({ tierId: null, days: 730 })).toBe('2 ans')
+    expect(formatStage({ tierId: null, days: 40 })).toBe('40 jours')
   })
 
   it('formate les dates', () => {

@@ -7,10 +7,11 @@ import {
   restoreHabit,
   resumeHabit,
   sameFrequency,
+  tierForDuration,
   updateHabit,
   type Habit,
 } from '../../engine/index.ts'
-import { formatFrequency, formatValidations } from '../format.ts'
+import { TIER_LABELS, formatFrequency, formatValidations } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
 import { Dialog } from './Dialog.tsx'
 import { HabitForm, type HabitFormValues } from './HabitForm.tsx'
@@ -162,6 +163,10 @@ interface ConfirmationProps {
 /** Écran de confirmation : la nouvelle fréquence s'applique à tout l'historique. */
 function FrequencyConfirmation({ habit, values, today, completions, onBack, onConfirm }: ConfirmationProps) {
   const preview = previewFrequencyChange(habit, completions, values.frequency, today)
+  // La fréquence s'applique à tout l'historique : le plus haut palier (le décor) peut aussi changer.
+  const highestBefore = tierForDuration(preview.before.bestDurationDays)
+  const highestAfter = tierForDuration(preview.after.bestDurationDays)
+  const tierLabel = (tier: typeof highestBefore) => (tier ? TIER_LABELS[tier.id] : 'aucun pour l’instant')
   return (
     <>
       <p>
@@ -180,6 +185,11 @@ function FrequencyConfirmation({ habit, values, today, completions, onBack, onCo
           <>Série actuelle inchangée : {formatValidations(preview.after.current)}</>
         )}
       </p>
+      {highestBefore?.id !== highestAfter?.id && (
+        <p className="preview">
+          Plus haut palier : {tierLabel(highestBefore)} → <strong>{tierLabel(highestAfter)}</strong>
+        </p>
+      )}
       <div className="actions">
         <button type="button" className="button button--secondary" onClick={onBack}>
           Retour
