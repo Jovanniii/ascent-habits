@@ -172,3 +172,61 @@ describe('getRecoveryState : pauses', () => {
     expect(getRecoveryState(habit, completions, TODAY)).toEqual({ status: 'available', missedDate: '2026-09-30' })
   })
 })
+
+describe('getRecoveryState : seulement s’il existe une série à sauver', () => {
+  const habit = makeHabit()
+
+  it('ne propose rien quand le jour manqué est le premier jour prévu', () => {
+    // Créée le 3 octobre, jamais cochée : il n'y a aucune série à préserver.
+    expect(getRecoveryState(makeHabit({ createdOn: '2026-10-03' }), [], TODAY)).toEqual({ status: 'none' })
+  })
+
+  it('ne propose rien après deux jours prévus manqués d’affilée', () => {
+    const completions = completionsBetween('2026-09-25', '2026-10-01') // 2 et 3 octobre manqués
+    expect(getRecoveryState(habit, completions, TODAY)).toEqual({ status: 'none' })
+  })
+
+  it('ne signale pas la limite hebdomadaire quand il n’y a rien à sauver', () => {
+    const completions = [
+      ...completionsBetween('2026-09-25', '2026-09-28'),
+      completion('2026-09-29', 'recovery'),
+      ...completionsBetween('2026-09-30', '2026-10-01'),
+    ]
+    expect(getRecoveryState(habit, completions, TODAY)).toEqual({ status: 'none' })
+  })
+
+  it('accepte un jour précédent validé par un rattrapage', () => {
+    // Le 4 octobre a été rattrapé le 5 ; le 5 est manqué ; on est le 6 (nouvelle semaine).
+    const completions = [
+      ...completionsBetween('2026-09-28', '2026-10-03'),
+      completion(TODAY, 'recovery'),
+    ]
+    expect(getRecoveryState(habit, completions, '2026-10-06')).toEqual({
+      status: 'available',
+      missedDate: '2026-10-05',
+    })
+  })
+
+  it('franchit une pause pour trouver le jour précédent', () => {
+    const paused = makeHabit({ pauses: [{ from: '2026-09-28', to: '2026-09-30' }] })
+    const completions = completionsBetween('2026-09-20', '2026-09-27') // 1er octobre manqué
+    expect(getRecoveryState(paused, completions, '2026-10-02')).toEqual({
+      status: 'available',
+      missedDate: '2026-10-01',
+    })
+  })
+
+  it('reste « rattrapé » (donc annulable) même si le jour précédent n’est plus validé', () => {
+    // Samedi 3 rattrapé, puis fréquence passée au week-end : le jour prévu précédent
+    // devient le dimanche 27 septembre, non validé. L'annulation doit rester possible.
+    const weekend = makeHabit({ frequency: { type: 'specificDays', days: [6, 7] } })
+    const completions = [...completionsBetween('2026-09-28', '2026-10-02'), completion('2026-10-03', 'recovery')]
+    expect(getRecoveryState(weekend, completions, TODAY)).toEqual({ status: 'recovered', missedDate: '2026-10-03' })
+  })
+
+  it('s’applique aux jours précis : le jour prévu précédent compte', () => {
+    const mwf = makeHabit({ frequency: MON_WED_FRI })
+    // Mercredi 30 manqué, vendredi 2 manqué : rien à sauver le dimanche.
+    expect(getRecoveryState(mwf, completionsOn(['2026-09-28']), TODAY)).toEqual({ status: 'none' })
+  })
+})
