@@ -65,7 +65,7 @@ export function TodayScreen() {
 
       {tasksForToday.length > 0 && (
         <section className="section" aria-labelledby="today-tasks">
-          <h2 id="today-tasks" className="section__title">Tâches pour aujourd’hui</h2>
+          <h2 id="today-tasks" className="section__title" tabIndex={-1}>Tâches pour aujourd’hui</h2>
           <ul className="list">
             {tasksForToday.map((task) => (
               <TaskItem key={task.id} task={task} goalName={task.goalId && goalNames.get(task.goalId)} />

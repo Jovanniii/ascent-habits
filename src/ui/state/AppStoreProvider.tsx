@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CommandError, type AppData } from '../../engine/index.ts'
 import { hasUserContent, requestPersistentStorage, type AppRepository } from '../../storage/index.ts'
 import { createId } from './ids.ts'
-import { StoreContext, type AppStore, type Command, type Notice } from './store.ts'
+import { StoreContext, toNotice, type Announcement, type AppStore, type Command, type Feedback, type Notice } from './store.ts'
 import { useToday } from './useToday.ts'
 
-const NOTICE_DURATION_MS = 4000
+/** Délai avant une annonce destinée aux lecteurs d'écran. */
+const ANNOUNCEMENT_DELAY_MS = 150
 
 interface Props {
   initialData: AppData
@@ -22,13 +23,21 @@ export function AppStoreProvider({ initialData, repository, now, children }: Pro
   const persistenceRequested = useRef(false)
   const today = useToday(now)
 
-  const notify = useCallback((next: Notice) => setNotice(next), [])
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null)
+  const announcementCount = useRef(0)
 
-  useEffect(() => {
-    if (!notice) return
-    const timer = setTimeout(() => setNotice(null), NOTICE_DURATION_MS)
-    return () => clearTimeout(timer)
-  }, [notice])
+  const notify = useCallback((next: Notice) => {
+    if (next.srOnly) {
+      // Léger délai : l'annonce passe après un éventuel déplacement du focus,
+      // qui sinon l'interromprait.
+      announcementCount.current += 1
+      const id = announcementCount.current
+      setTimeout(() => setAnnouncement({ message: next.message, id }), ANNOUNCEMENT_DELAY_MS)
+    } else {
+      setNotice(next)
+    }
+  }, [])
+  const dismissNotice = useCallback(() => setNotice(null), [])
 
   const commit = useCallback(
     (next: AppData) => {
@@ -53,11 +62,11 @@ export function AppStoreProvider({ initialData, repository, now, children }: Pro
   )
 
   const run = useCallback(
-    (command: Command, successMessage?: string) => {
+    (command: Command, feedback?: Feedback) => {
       try {
         const next = command(dataRef.current, { today, now: now().toISOString(), newId: createId })
         commit(next)
-        if (successMessage) setNotice({ kind: 'info', message: successMessage })
+        if (feedback) notify(toNotice(feedback))
         return true
       } catch (error) {
         if (error instanceof CommandError) {
@@ -67,20 +76,20 @@ export function AppStoreProvider({ initialData, repository, now, children }: Pro
         throw error
       }
     },
-    [commit, now, today],
+    [commit, notify, now, today],
   )
 
   const replaceAll = useCallback(
-    (next: AppData, successMessage?: string) => {
+    (next: AppData, feedback?: Feedback) => {
       commit(next)
-      if (successMessage) setNotice({ kind: 'info', message: successMessage })
+      if (feedback) notify(toNotice(feedback))
     },
-    [commit],
+    [commit, notify],
   )
 
   const store = useMemo<AppStore>(
-    () => ({ data, today, now, run, replaceAll, notice, notify }),
-    [data, today, now, run, replaceAll, notice, notify],
+    () => ({ data, today, now, run, replaceAll, notice, announcement, notify, dismissNotice }),
+    [data, today, now, run, replaceAll, notice, announcement, notify, dismissNotice],
   )
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
