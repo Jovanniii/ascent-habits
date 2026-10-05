@@ -1,0 +1,181 @@
+/*
+ * Habillage provisoire du panorama montagne (palette du Doc 07).
+ * Toutes les règles visent .mountain-scene : rien ne s'applique au thème Sobre.
+ * L'accent rouge orangé est réservé à l'alpiniste, à la flamme et au drapeau du
+ * sommet ; un halo couleur neige garantit un contraste d'au moins 3:1.
+ */
+
+.mountain-scene {
+  --mountain-sky-top: #ffd9b0;
+  --mountain-sky-bottom: #f7f4ef;
+  --mountain-far: #a8b8d8;
+  --mountain-mid: #8fa3c6;
+  --mountain-near: #4f6d8f;
+  --mountain-snow: #f7f4ef;
+  --mountain-halo: #f7f4ef;
+  --mountain-accent: #e8573c;
+  --mountain-ink: #1f2a4d;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Mode sombre = nuit, en attendant le cycle jour/nuit selon l'heure (reporté). */
+  .mountain-scene {
+    --mountain-sky-top: #1f2a4d;
+    --mountain-sky-bottom: #3a3f73;
+    --mountain-far: #3e4f7a;
+    --mountain-mid: #485e8a;
+    --mountain-near: #5d7ba0;
+  }
+}
+
+.mountain-scene__sky-top {
+  stop-color: var(--mountain-sky-top);
+}
+
+.mountain-scene__sky-bottom {
+  stop-color: var(--mountain-sky-bottom);
+}
+
+.mountain-scene__far {
+  fill: var(--mountain-far);
+}
+
+.mountain-scene__mid {
+  fill: var(--mountain-mid);
+}
+
+.mountain-scene__near {
+  fill: var(--mountain-near);
+}
+
+.mountain-scene__snow {
+  fill: var(--mountain-snow);
+}
+
+.mountain-scene__trail {
+  fill: none;
+  stroke: var(--mountain-snow);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 0.1 3;
+  opacity: 0.8;
+}
+
+.mountain-scene__camp {
+  opacity: 0.4;
+}
+
+.mountain-scene__camp.is-reached {
+  opacity: 1;
+}
+
+.mountain-scene__tent,
+.mountain-scene__pennant {
+  fill: var(--mountain-snow);
+}
+
+.mountain-scene__pole {
+  fill: var(--mountain-ink);
+}
+
+.mountain-scene__summit-flag,
+.mountain-scene__accent {
+  fill: var(--mountain-accent);
+}
+
+.mountain-scene__halo {
+  fill: var(--mountain-halo);
+  opacity: 0.92;
+}
+
+.mountain-scene__rope {
+  fill: none;
+  stroke: var(--mountain-halo);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.mountain-scene__climber,
+.mountain-scene__body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+@keyframes mountain-breath {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.05);
+  }
+}
+
+@keyframes mountain-step-up {
+  0% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(2px, -4px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes mountain-step-down {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-1px, 2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes mountain-hop {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  25%,
+  75% {
+    transform: translateY(-4px);
+  }
+}
+
+/*
+ * Animations en « opt-in » : seulement si le système ne demande pas de réduire
+ * les animations, si le réglage de l'application les autorise, et si la scène
+ * l'indique. Aucune animation ni transition ne doit être déclarée hors de ce bloc.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__position[data-animate='true'] {
+    transition: transform 600ms ease-out;
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__climber[data-gesture='checked'] {
+    animation: mountain-step-up 600ms ease-out;
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'][data-state='celebrating'] .mountain-scene__climber[data-gesture='checked'] {
+    animation: mountain-hop 900ms ease-in-out;
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__climber[data-gesture='unchecked'] {
+    animation: mountain-step-down 300ms ease-out;
+  }
+
+  /* Respiration discrète, seulement au repos et hors geste : une seule animation à la fois. */
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__climber[data-gesture='none'] .is-rest {
+    animation: mountain-breath 4s ease-in-out infinite;
+    animation-delay: inherit;
+  }
+}

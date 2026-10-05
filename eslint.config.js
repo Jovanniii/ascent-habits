@@ -53,4 +53,59 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // Les thèmes habillent les données : ils ne dépendent ni de l'interface ni du stockage.
+    files: ['src/themes/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '(^|/)(ui|storage)(/|$)',
+              message: "Un thème ne dépend ni de l'interface ni du stockage.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Un dossier de thème n'importe jamais le registre (import circulaire au chargement).
+    files: ['src/themes/*/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '(^|/)(ui|storage)(/|$)',
+              message: "Un thème ne dépend ni de l'interface ni du stockage.",
+            },
+            {
+              regex: '^(\\.\\./)+(index|registry)(\\.ts)?$',
+              message: "Un thème n'importe que ../types.ts, ../progress.ts et le moteur.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // L'interface ne connaît aucun thème en particulier : elle passe par le point d'entrée.
+    files: ['src/ui/**/*.{ts,tsx}', 'src/main.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: 'themes/(?!index\\.ts$)',
+              message: "L'interface importe les thèmes uniquement via src/themes/index.ts.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ])

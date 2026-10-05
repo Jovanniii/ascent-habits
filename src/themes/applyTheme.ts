@@ -27,4 +27,8 @@ export function applyTheme(theme: Theme, animationsEnabled: boolean, doc: Docume
   style.textContent = themeStyleSheet(theme)
   doc.documentElement.dataset.theme = theme.id
   doc.documentElement.dataset.motion = animationsEnabled ? 'full' : 'reduced'
+  // Couleur de la barre d'état du téléphone, alignée sur le thème.
+  const primary = theme.tokens.light['--color-primary']
+  const meta = doc.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+  if (meta && primary) meta.content = primary
 }
