@@ -699,6 +699,46 @@ main.screen {
   flex: 1;
 }
 
+.task__illustration {
+  display: flex;
+  flex: none;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.task__checked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 4px;
+  background: var(--color-done);
+  color: var(--color-on-done);
+}
+
+.task__checked .check__icon {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes task-clearing-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .task--clearing {
+    animation: task-clearing-fade 700ms ease-in forwards;
+  }
+}
+
 /* Objectifs */
 
 .goal {
@@ -741,6 +781,48 @@ main.screen {
   border-radius: calc(var(--radius) * 0.75);
   background: var(--color-surface-muted);
   font-weight: 600;
+}
+
+.goal__scene {
+  display: flex;
+  border-radius: calc(var(--radius) * 0.75);
+  overflow: hidden;
+}
+
+.goal--celebrating .goal__name {
+  font-weight: 700;
+}
+
+.goal__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-done);
+  color: var(--color-on-done);
+}
+
+@keyframes goal-badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .goal--celebrating .goal__badge {
+    animation: goal-badge-pop 500ms ease-out;
+  }
 }
 
 /* Divers */

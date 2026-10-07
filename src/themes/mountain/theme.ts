@@ -1,6 +1,10 @@
 import type { Theme } from '../types.ts'
 import { MountainScene } from './MountainScene.tsx'
+import { GoalSummitScene } from './goals/GoalSummitScene.tsx'
+import { TaskObstacle } from './tasks/TaskObstacle.tsx'
 import './mountain.css'
+import './tasks/tasks.css'
+import './goals/goals.css'
 
 /**
  * Thème montagne, visuels provisoires (formes SVG simples). Palette du Doc 07 :
@@ -40,4 +44,6 @@ export const theme: Theme = {
     },
   },
   HabitScene: MountainScene,
+  TaskIllustration: TaskObstacle,
+  GoalScene: GoalSummitScene,
 }
