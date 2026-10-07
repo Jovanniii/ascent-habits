@@ -1,5 +1,6 @@
 import type { Theme } from '../types.ts'
 import { MountainScene } from './MountainScene.tsx'
+import { TrailDayMark } from './TrailDayMark.tsx'
 import './mountain.css'
 
 /**
@@ -64,4 +65,5 @@ export const theme: Theme = {
     },
   },
   HabitScene: MountainScene,
+  CalendarDayMark: TrailDayMark,
 }
