@@ -7,6 +7,7 @@ import { NoticeBar } from './components/NoticeBar.tsx'
 import { TabBar, type TabId } from './components/TabBar.tsx'
 import { downloadTextFile } from './download.ts'
 import { GoalsScreen } from './screens/GoalsScreen.tsx'
+import { CalendarScreen } from './screens/CalendarScreen.tsx'
 import { SettingsScreen } from './screens/SettingsScreen.tsx'
 import { TasksScreen } from './screens/TasksScreen.tsx'
 import { TodayScreen } from './screens/TodayScreen.tsx'
@@ -119,6 +120,7 @@ function Shell({ storageAvailable }: { storageAvailable: boolean }) {
         {tab === 'today' && <TodayScreen />}
         {tab === 'tasks' && <TasksScreen />}
         {tab === 'goals' && <GoalsScreen />}
+        {tab === 'calendar' && <CalendarScreen />}
         {tab === 'settings' && <SettingsScreen />}
       </main>
       <NoticeBar />

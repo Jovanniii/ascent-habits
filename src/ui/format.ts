@@ -96,3 +96,18 @@ export function formatDueDate(date: LocalDate, today: LocalDate): string {
   if (date === addDays(today, 1)) return 'demain'
   return shortDateFormat.format(utcDate(date))
 }
+
+const monthYearFormat = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+const monthNameFormat = new Intl.DateTimeFormat('fr-FR', { month: 'long', timeZone: 'UTC' })
+
+/** « octobre 2026 » */
+export function formatMonthYear(month: { year: number; month: number }): string {
+  const date = `${String(month.year).padStart(4, '0')}-${String(month.month).padStart(2, '0')}-01`
+  return monthYearFormat.format(utcDate(date))
+}
+
+/** « 1er octobre », « 12 octobre » */
+export function formatDayMonth(date: LocalDate): string {
+  const day = Number(date.slice(8, 10))
+  return `${day === 1 ? '1er' : day} ${monthNameFormat.format(utcDate(date))}`
+}
