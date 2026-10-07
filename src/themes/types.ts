@@ -73,4 +73,23 @@ export interface Theme {
   TaskIllustration?: ComponentType<TaskIllustrationProps>
   /** Scène décorative d'un objectif, affichée au-dessus de sa progression et de ses jalons. */
   GoalScene?: ComponentType<GoalSceneProps>
+  /** Le décor suit le moment de la journée (réglage « Ambiance » proposé dans les réglages). */
+  followsAmbiance?: boolean
+  /** Vue d'ensemble décorative de toutes les habitudes, en lecture seule (écran « Panorama »). */
+  Panorama?: ComponentType<PanoramaProps>
+}
+
+/** Une habitude dans la vue d'ensemble : seulement des données neutres. */
+export interface PanoramaHabit {
+  id: string
+  /** Nom de l'habitude, repris en décor (le texte accessible reste dans l'interface). */
+  label: string
+  progress: HabitProgress
+}
+
+/** Données neutres transmises à la vue d'ensemble (décorative, sans interaction). */
+export interface PanoramaProps {
+  habits: readonly PanoramaHabit[]
+  /** Faux si le réglage de l'application ou celui de l'appareil réduit les animations. */
+  motionAllowed: boolean
 }

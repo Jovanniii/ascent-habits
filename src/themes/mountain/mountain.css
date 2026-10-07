@@ -1,34 +1,19 @@
 /*
- * Habillage provisoire du panorama montagne (palette du Doc 07).
+ * Habillage provisoire de la scène montagne (palette du Doc 07).
  * Toutes les règles visent .mountain-scene : rien ne s'applique au thème Sobre.
- * L'accent rouge orangé est réservé à l'alpiniste, à la flamme et au drapeau du
- * sommet ; un halo couleur neige garantit un contraste d'au moins 3:1.
+ * Les couleurs sont des variables posées par la scène selon l'ambiance (matin,
+ * jour, soir, nuit) : voir scene/palettes.ts. L'accent rouge orangé est réservé à
+ * l'alpiniste, à la flamme et au drapeau du sommet, sur un halo (contraste ≥ 3:1).
+ *
+ * Budget de performance (docs/pipeline-assets.md) : seules transform et opacity
+ * sont animées (aucun recalcul de mise en page) ; les couleurs changent par
+ * transition, seulement au changement d'ambiance.
  */
 
 .mountain-scene {
-  --mountain-sky-top: #ffd9b0;
-  --mountain-sky-bottom: #f7f4ef;
-  --mountain-far: #a8b8d8;
-  --mountain-mid: #8fa3c6;
-  --mountain-near: #4f6d8f;
-  --mountain-snow: #f7f4ef;
-  --mountain-halo: #f7f4ef;
-  --mountain-accent: #e8573c;
-  --mountain-ink: #1f2a4d;
   display: block;
   width: 100%;
   height: 100%;
-}
-
-@media (prefers-color-scheme: dark) {
-  /* Mode sombre = nuit, en attendant le cycle jour/nuit selon l'heure (reporté). */
-  .mountain-scene {
-    --mountain-sky-top: #1f2a4d;
-    --mountain-sky-bottom: #3a3f73;
-    --mountain-far: #3e4f7a;
-    --mountain-mid: #485e8a;
-    --mountain-near: #5d7ba0;
-  }
 }
 
 .mountain-scene__sky-top {
@@ -100,9 +85,87 @@
 }
 
 .mountain-scene__climber,
+.mountain-scene__figure,
 .mountain-scene__body {
   transform-box: fill-box;
   transform-origin: 50% 100%;
+}
+
+/* Ciel : nuages et étoiles, visibles selon l'ambiance. */
+
+.mountain-sky__clouds {
+  opacity: var(--mountain-cloud-opacity, 1);
+}
+
+.mountain-sky__cloud {
+  fill: var(--mountain-cloud);
+}
+
+.mountain-sky__stars {
+  opacity: var(--mountain-star-opacity, 0);
+}
+
+.mountain-sky__star {
+  fill: var(--mountain-star);
+}
+
+/* Vue panorama : ciel fixe, plans lointains, rangée de montagnes qui défile. */
+
+.mountain-panorama {
+  position: relative;
+  height: clamp(200px, 36vh, 340px);
+  overflow: hidden;
+  border-radius: 16px;
+  isolation: isolate;
+}
+
+.mountain-panorama__sky,
+.mountain-panorama__plane {
+  position: absolute;
+  inset: auto auto 0 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Les plans lointains sont plus larges que l'écran de la place que leur laisse le parallaxe. */
+.mountain-panorama__plane[data-depth='1'] {
+  width: calc(100% + var(--panorama-room, 0) * 0.25px);
+}
+
+.mountain-panorama__plane[data-depth='2'] {
+  width: calc(100% + var(--panorama-room, 0) * 0.5px);
+}
+
+.mountain-panorama__scroller {
+  position: relative;
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.mountain-panorama__scroller:focus {
+  outline: none;
+}
+
+.mountain-panorama__row {
+  flex: none;
+  height: 100%;
+  /* Environ 170 px par montagne : deux montagnes visibles sur un téléphone. */
+  width: max(100%, calc(var(--panorama-count, 1) * 170px));
+}
+
+.mountain-panorama__label rect {
+  fill: var(--mountain-halo);
+  opacity: 0.94;
+}
+
+.mountain-panorama__label text {
+  fill: var(--mountain-ink);
+  font-size: 4.6px;
+  font-weight: 700;
 }
 
 @keyframes mountain-breath {
@@ -156,6 +219,25 @@
  * les animations, si le réglage de l'application les autorise, et si la scène
  * l'indique. Aucune animation ni transition ne doit être déclarée hors de ce bloc.
  */
+@keyframes mountain-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(36px);
+  }
+}
+
+@keyframes mountain-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__position[data-animate='true'] {
     transition: transform 600ms ease-out;
@@ -174,8 +256,39 @@
   }
 
   /* Respiration discrète, seulement au repos et hors geste : une seule animation à la fois. */
-  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__climber[data-gesture='none'] .is-rest {
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__climber[data-gesture='none'] .mountain-scene__figure.is-rest {
     animation: mountain-breath 4s ease-in-out infinite;
     animation-delay: var(--mountain-breath-delay, 0s);
+  }
+
+  /* Changement d'ambiance : les couleurs passent d'une palette à l'autre en douceur. */
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] :is(.mountain-scene__sky-top, .mountain-scene__sky-bottom) {
+    transition: stop-color 2.4s ease-in-out;
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] :is(.mountain-scene__far, .mountain-scene__mid, .mountain-scene__near, .mountain-scene__snow, .mountain-sky__cloud) {
+    transition: fill 2.4s ease-in-out;
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] :is(.mountain-sky__clouds, .mountain-sky__stars) {
+    transition: opacity 2.4s ease-in-out;
+  }
+
+  /* Vie discrète (panorama seulement) : une seule animation d'ambiance à la fois. */
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-sky__clouds[data-drift='true'] .mountain-sky__cloud {
+    animation: mountain-drift 70s ease-in-out infinite alternate;
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-sky__stars[data-twinkle='true'] .is-twinkling {
+    animation: mountain-twinkle 5s ease-in-out infinite;
+  }
+
+  /* Parallaxe : les plans lointains glissent moins vite que la rangée de montagnes. */
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-panorama__plane[data-depth='1'] {
+    transform: translateX(calc(var(--panorama-scroll, 0) * -0.25px));
+  }
+
+  :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-panorama__plane[data-depth='2'] {
+    transform: translateX(calc(var(--panorama-scroll, 0) * -0.5px));
   }
 }

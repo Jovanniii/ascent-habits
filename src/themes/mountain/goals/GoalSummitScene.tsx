@@ -5,6 +5,7 @@
  * texte et en boutons par l'interface.
  */
 import { useId } from 'react'
+import { useDayPeriod } from '../../ambiance.ts'
 import type { GoalSceneProps } from '../../types.ts'
 import { Climber, type Pose } from '../MountainScene.tsx'
 import {
@@ -18,6 +19,7 @@ import {
   summitSnowPath,
   walk,
 } from './geometry.ts'
+import { paletteFor, paletteStyle } from '../scene/palettes.ts'
 
 /** Chaîne lointaine, prolongée de part et d'autre du cadre. */
 const FAR_RANGE =
@@ -34,6 +36,7 @@ function Pennant({ x, y, planted }: { x: number; y: number; planted: boolean }) 
 
 export function GoalSummitScene({ progress, achieved, celebrating, motionAllowed }: GoalSceneProps) {
   const gradientId = useId()
+  const period = useDayPeriod()
   const layout = goalLayout({ done: progress.done, total: progress.total, achieved })
   const climberAt = pointOnTrail(layout.climber)
   const top = pointOnTrail(layout.summit)
@@ -52,6 +55,8 @@ export function GoalSummitScene({ progress, achieved, celebrating, motionAllowed
       data-achieved={achieved ? 'true' : 'false'}
       data-climber={layout.climber.toFixed(4)}
       data-summit={layout.summit.toFixed(4)}
+      data-ambiance={period}
+      style={paletteStyle(paletteFor(period))}
     >
       <defs>
         <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={GOAL_VIEWBOX_HEIGHT}>
