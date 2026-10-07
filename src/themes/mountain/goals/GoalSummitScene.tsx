@@ -8,6 +8,7 @@ import { useId } from 'react'
 import { useDayPeriod } from '../../ambiance.ts'
 import type { GoalSceneProps } from '../../types.ts'
 import { Climber, type Pose } from '../MountainScene.tsx'
+import { SceneAsset } from '../assets/SceneAsset.tsx'
 import {
   GOAL_TRAIL,
   GOAL_VIEWBOX_HEIGHT,
@@ -28,8 +29,10 @@ const FAR_RANGE =
 function Pennant({ x, y, planted }: { x: number; y: number; planted: boolean }) {
   return (
     <g className={`goal-summit__pennant${planted ? ' is-planted' : ''}`} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(1.4)`}>
-      <rect x="-0.4" y="-8" width="0.8" height="8" rx="0.4" className="mountain-scene__pole" />
-      <path d="M0.4 -8 L5.6 -6.6 L0.4 -5.2 Z" className="goal-summit__pennant-cloth" />
+      <SceneAsset id="pennant" x={-0.4} y={-8} width={4.8} height={8}>
+        <rect x="-0.4" y="-8" width="0.8" height="8" rx="0.4" className="mountain-scene__pole" />
+        <path d="M0.4 -8 L5.6 -6.6 L0.4 -5.2 Z" className="goal-summit__pennant-cloth" />
+      </SceneAsset>
     </g>
   )
 }

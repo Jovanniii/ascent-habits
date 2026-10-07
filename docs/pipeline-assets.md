@@ -46,11 +46,11 @@ Le nom du fichier est l'identifiant du manifeste suivi de `.svg`, en minuscules 
 | Alpiniste, 6 états | `climber-rest`, `climber-walk`, `climber-tent`, `climber-celebrate`, `climber-summit`, `climber-recovery` | 24 × 32 | pieds, en bas au centre | silhouette actuelle |
 | Camp de base | `camp.svg` | 24 × 24 | bas centre | tente et fanion actuels |
 | Flamme de série, 2 niveaux | `flame-1.svg`, `flame-2.svg` | 16 × 20 | bas centre | flamme actuelle |
-| Obstacles de tâche | `obstacle-rock`, `obstacle-low-cloud`, `obstacle-branch`, `obstacle-snowdrift` | 32 × 24 | bas centre | rien (à brancher par la piste tâches) |
+| Obstacles de tâche | `obstacle-rock`, `obstacle-low-cloud`, `obstacle-branch`, `obstacle-scree` | 32 × 24 | bas centre | obstacles actuels de la piste 4 |
 | Drapeau de sommet d'habitude | `summit-flag.svg` | 20 × 20 | pied du mât, en bas à gauche | drapeau actuel |
-| Sommet d'objectif | `goal-summit.svg` | 160 × 120 | bas centre | rien (piste objectifs) |
-| Fanion de jalon | `pennant.svg` | 12 × 20 | pied du mât | rien (piste objectifs) |
-| Icônes de calendrier | `calendar-validated`, `calendar-recovered`, `calendar-missed` | 24 × 24 | bas centre | rien (piste calendrier) |
+| Sommet d'objectif | `goal-summit.svg` | 160 × 120 | bas centre | rien : au manifeste, pas encore affiché (le sommet actuel est calculé) |
+| Fanion de jalon | `pennant.svg` | 12 × 20 | pied du mât, en bas à gauche | fanion actuel |
+| Icônes de calendrier | `calendar-validated`, `calendar-recovered`, `calendar-missed` | 24 × 24 | bas centre | rien : au manifeste, à afficher par le calendrier |
 
 Lumières : le matin réutilise les plans de jour, seul le ciel change (palette « matin »). Les plans 1 à 4 ont une variante par lumière parce qu'une image SVG chargée à part ne reçoit pas les couleurs de la page.
 

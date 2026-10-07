@@ -6,9 +6,10 @@
  * scène dessine sa forme provisoire (voir resolve.ts). Convention complète :
  * docs/pipeline-assets.md.
  *
- * Ce fichier n'importe rien : le script d'optimisation (scripts/optimize-svg.ts)
- * le lit aussi pour vérifier les noms de fichiers.
+ * Ce fichier n'importe que des constantes sans dépendance : le script
+ * d'optimisation (scripts/optimize-svg.ts) le lit aussi pour vérifier les noms.
  */
+import { OBSTACLE_VARIANTS } from '../tasks/obstacles.ts'
 
 /** Plans de montagnes, du plus lointain (1) au premier plan (4). */
 export const PLANE_DEPTHS = [1, 2, 3, 4] as const
@@ -17,7 +18,8 @@ export const PLANE_LIGHTS = ['day', 'evening', 'night'] as const
 /** États de l'alpiniste (Doc 07, section 6). */
 export const CLIMBER_STATES = ['rest', 'walk', 'tent', 'celebrate', 'summit', 'recovery'] as const
 export const FLAME_LEVELS = [1, 2] as const
-export const OBSTACLE_KINDS = ['rock', 'low-cloud', 'branch', 'snowdrift'] as const
+/** Variantes d'obstacle de tâche (piste 4). */
+export const OBSTACLE_KINDS = OBSTACLE_VARIANTS
 export const CALENDAR_ICONS = ['validated', 'recovered', 'missed'] as const
 
 export type PlaneAssetId = `plane-${(typeof PLANE_DEPTHS)[number]}-${(typeof PLANE_LIGHTS)[number]}`
@@ -86,7 +88,7 @@ const OBSTACLE_NAMES: Record<(typeof OBSTACLE_KINDS)[number], string> = {
   rock: 'rocher',
   'low-cloud': 'nuage bas',
   branch: 'branche',
-  snowdrift: 'congère',
+  scree: 'éboulis',
 }
 
 export const ASSET_MANIFEST: readonly AssetSpec[] = [
@@ -118,11 +120,11 @@ export const ASSET_MANIFEST: readonly AssetSpec[] = [
     ),
   ),
   ...OBSTACLE_KINDS.map((kind) =>
-    spec(`obstacle-${kind}`, 'obstacle', [32, 24], 'bottom-center', 'none', `Obstacle de tâche : ${OBSTACLE_NAMES[kind]}`),
+    spec(`obstacle-${kind}`, 'obstacle', [32, 24], 'bottom-center', 'provisional-shape', `Obstacle de tâche : ${OBSTACLE_NAMES[kind]}`),
   ),
   spec('summit-flag', 'summit', [20, 20], 'bottom-left', 'provisional-shape', 'Drapeau planté au sommet d’une habitude'),
   spec('goal-summit', 'summit', [160, 120], 'bottom-center', 'none', 'Grand sommet d’objectif à l’horizon'),
-  spec('pennant', 'pennant', [12, 20], 'bottom-left', 'none', 'Fanion de jalon planté sur le chemin'),
+  spec('pennant', 'pennant', [12, 20], 'bottom-left', 'provisional-shape', 'Fanion de jalon planté sur le chemin'),
   ...CALENDAR_ICONS.map((icon) =>
     spec(
       `calendar-${icon}`,

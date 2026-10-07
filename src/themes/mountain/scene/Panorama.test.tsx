@@ -6,6 +6,7 @@ import { DayPeriodContext, type DayPeriod } from '../../ambiance.ts'
 import { computeHabitProgress, type ProgressInput } from '../../progress.ts'
 import type { PanoramaHabit } from '../../types.ts'
 import { MountainScene } from '../MountainScene.tsx'
+import { GoalSummitScene } from '../goals/GoalSummitScene.tsx'
 import { theme } from '../theme.ts'
 import { Panorama } from './Panorama.tsx'
 import { PARALLAX_ROOM_VAR, PARALLAX_SCROLL_VAR } from './useParallax.ts'
@@ -140,5 +141,16 @@ describe('scène du jour et ambiance', () => {
     expect(container.querySelector('.mountain-scene__far')).not.toBeNull()
     expect(container.querySelector('.mountain-scene__mid')).not.toBeNull()
     expect(container.querySelector('.mountain-scene__figure.is-rest')).not.toBeNull()
+  })
+
+  it('habille aussi le sommet d’objectif selon l’ambiance', () => {
+    const { container } = render(
+      <DayPeriodContext value="night">
+        <GoalSummitScene progress={{ done: 1, total: 3, ratio: 1 / 3, percent: 33, allDone: false }} achieved={false} celebrating={false} motionAllowed />
+      </DayPeriodContext>,
+    )
+    const svg = container.querySelector('svg')!
+    expect(svg).toHaveAttribute('data-ambiance', 'night')
+    expect(svg.style.getPropertyValue('--mountain-sky-top')).toBe('#1f2a4d')
   })
 })

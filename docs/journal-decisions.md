@@ -318,6 +318,9 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 - **Décision :** la scène est décorative ; ajout, renommage, suppression et coche passent par la liste accessible placée juste sous la scène, dans la même carte.
 - **Alternative écartée :** des fanions cliquables dans la scène : petites cibles tactiles, et les fanions sont comptés (P4-D2), pas liés à un jalon précis.
 - **À confirmer :** si une interaction directe dans la scène est souhaitée (par exemple un bouton « + » sur le sentier).
+
+---
+
 ## Piste 5 : socle visuel du thème montagne (octobre 2026)
 
 ### P5-D1. Typographie Nunito auto-hébergée
@@ -370,6 +373,7 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 ### P5-D7. Pipeline d'assets
 
 - **Décision :** manifeste TypeScript typé (`assets/manifest.ts`) : un identifiant par asset, qui est aussi le nom du fichier. Fichiers découverts à la compilation ; un fichier absent fait retomber la scène sur sa forme provisoire, tout comme un fichier qui ne se charge pas. Script d'optimisation sans dépendance (`npm run assets:optimize`, `npm run assets:check` en CI). Détails : `docs/pipeline-assets.md`.
+- **Branchement :** l'alpiniste (6 états), les camps, la flamme, le drapeau du sommet, les plans 1 et 2, les obstacles de tâche (variantes de la piste 4 : rocher, nuage bas, branche, éboulis) et les fanions de jalon retombent sur leur forme provisoire. Le sommet d'objectif, les plans 3 et 4 et les icônes de calendrier sont au manifeste mais pas encore affichés (pas de forme provisoire à remplacer).
 - **Alternatives écartées :** SVGO en dépendance (plus complet, mais dépendance ajoutée pour des fichiers encore inexistants ; à reconsidérer à l'arrivée des vrais visuels) ; SVG intégrés en composants React (le graphiste ne pourrait pas livrer un fichier seul) ; chargement à l'exécution avec test d'existence (requêtes réseau, scintillement).
 - **Raison :** l'illustrateur livre des fichiers, le code ne change pas, et l'application reste utilisable à chaque étape.
 
