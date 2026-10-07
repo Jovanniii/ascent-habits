@@ -12,7 +12,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "assets:optimize": "node scripts/optimize-svg.ts",
+    "assets:check": "node scripts/optimize-svg.ts --check",
+    "check:budget": "node scripts/check-budget.ts"
   },
   "dependencies": {
     "react": "^19.3.0",

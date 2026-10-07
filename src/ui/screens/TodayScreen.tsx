@@ -1,15 +1,25 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createHabit, isScheduledOn, type Habit } from '../../engine/index.ts'
+import { getTheme } from '../../themes/index.ts'
 import { Dialog } from '../components/Dialog.tsx'
 import { HabitCard } from '../components/HabitCard.tsx'
 import { HabitForm, type HabitFormValues } from '../components/HabitForm.tsx'
 import { TaskItem } from '../components/TaskItem.tsx'
 import { capitalize, formatLongDate } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
+import { PanoramaScreen } from './PanoramaScreen.tsx'
 
 export function TodayScreen() {
   const { data, today, run } = useAppStore()
   const [creating, setCreating] = useState(false)
+  const [panorama, setPanorama] = useState(false)
+  const panoramaButton = useRef<HTMLButtonElement>(null)
+  const leftPanorama = useRef(false)
+
+  useEffect(() => {
+    // Au retour du panorama, le focus revient sur le bouton qui l'a ouvert.
+    if (!panorama && leftPanorama.current) panoramaButton.current?.focus()
+  }, [panorama])
 
   const activeGoals = data.goals.filter((goal) => goal.status === 'active')
   const active = data.habits.filter((habit) => habit.status === 'active')
@@ -29,10 +39,27 @@ export function TodayScreen() {
     if (created) setCreating(false)
   }
 
+  const hasPanorama = Boolean(getTheme(data.settings.themeId).Panorama) && data.habits.some((h) => h.status !== 'archived')
+  if (panorama) {
+    return (
+      <PanoramaScreen
+        onBack={() => {
+          leftPanorama.current = true
+          setPanorama(false)
+        }}
+      />
+    )
+  }
+
   return (
     <section className="screen" aria-labelledby="today-title">
-      <header className="screen__header">
+      <header className={hasPanorama ? 'screen__header screen__header--action' : 'screen__header'}>
         <h1 id="today-title" className="screen__title" tabIndex={-1}>Aujourd’hui</h1>
+        {hasPanorama && (
+          <button ref={panoramaButton} type="button" className="button button--secondary" onClick={() => setPanorama(true)}>
+            Panorama
+          </button>
+        )}
         <p className="screen__subtitle">{capitalize(formatLongDate(today))}</p>
       </header>
 

@@ -4,6 +4,7 @@
  * ceux de l'interface. Une tâche en retard n'est jamais dessinée différemment.
  */
 import type { TaskIllustrationProps } from '../../types.ts'
+import { SceneAsset } from '../assets/SceneAsset.tsx'
 import { obstacleVariant, type ObstacleVariant } from './obstacles.ts'
 
 export const OBSTACLE_WIDTH = 56
@@ -65,7 +66,10 @@ export function TaskObstacle({ taskId, clearing, motionAllowed }: TaskIllustrati
       <rect x="0" y="0" width={OBSTACLE_WIDTH} height={OBSTACLE_HEIGHT} rx="10" className="task-obstacle__sky" />
       <path d="M0 40 Q14 34 28 36 Q42 38 56 32 L56 44 L0 44 Z" className="task-obstacle__ground" />
       <path d="M2 41 Q16 36 28 37.5 Q42 39 54 34" className="task-obstacle__trail" />
-      <Obstacle variant={variant} />
+      {/* Illustration livrée (32 × 24, posée sur le sentier), sinon forme provisoire. */}
+      <SceneAsset id={`obstacle-${variant}`} x={8} y={6} width={40} height={30}>
+        <Obstacle variant={variant} />
+      </SceneAsset>
     </svg>
   )
 }

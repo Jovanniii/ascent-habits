@@ -2,14 +2,18 @@ import type { Theme } from '../types.ts'
 import { MountainScene } from './MountainScene.tsx'
 import { GoalSummitScene } from './goals/GoalSummitScene.tsx'
 import { TaskObstacle } from './tasks/TaskObstacle.tsx'
+import { Panorama } from './scene/Panorama.tsx'
 import './mountain.css'
+import './tokens.css'
 import './tasks/tasks.css'
 import './goals/goals.css'
 
 /**
  * Thème montagne, visuels provisoires (formes SVG simples). Palette du Doc 07 :
- * clair = jour (neige, ardoise), sombre = nuit (bleu nuit, brume). L'accent rouge
- * orangé n'est jamais utilisé pour l'interface : il reste réservé à la scène.
+ * l'interface suit le mode clair ou sombre du téléphone (neige et ardoise, ou bleu
+ * nuit et brume) ; le décor suit l'ambiance (matin, jour, soir, nuit, voir
+ * scene/palettes.ts). L'accent rouge orangé n'est jamais utilisé pour l'interface :
+ * il reste réservé à la scène. Typographie Nunito : tokens.css.
  */
 export const theme: Theme = {
   id: 'mountain',
@@ -46,4 +50,6 @@ export const theme: Theme = {
   HabitScene: MountainScene,
   TaskIllustration: TaskObstacle,
   GoalScene: GoalSummitScene,
+  followsAmbiance: true,
+  Panorama,
 }

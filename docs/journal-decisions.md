@@ -318,3 +318,70 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 - **Décision :** la scène est décorative ; ajout, renommage, suppression et coche passent par la liste accessible placée juste sous la scène, dans la même carte.
 - **Alternative écartée :** des fanions cliquables dans la scène : petites cibles tactiles, et les fanions sont comptés (P4-D2), pas liés à un jalon précis.
 - **À confirmer :** si une interaction directe dans la scène est souhaitée (par exemple un bouton « + » sur le sentier).
+
+---
+
+## Piste 5 : socle visuel du thème montagne (octobre 2026)
+
+### P5-D1. Typographie Nunito auto-hébergée
+
+- **Décision :** Nunito en deux graisses (400 et 700), fichiers woff2 du sous-ensemble latin (français compris) copiés dans `src/themes/mountain/assets/fonts/` (31,8 Ko au total, licence SIL OFL jointe). `font-display: swap`, repli sur `ui-rounded` (police arrondie d'Apple) puis la police système. La police n'est active qu'avec le thème montagne, via la variable `--font-body` que l'interface lit avec un repli système. Le service worker met désormais les `.woff2` en cache.
+- **Alternatives écartées :** Google Fonts (requête vers un serveur tiers, pas de hors-ligne garanti) ; le paquet `@fontsource/nunito` en dépendance (inutile pour deux fichiers) ; police variable (plus lourde pour deux graisses) ; 400 et 600 (le gras 700 marque mieux les titres ; les règles en 600 utilisent le fichier 700, sans gras synthétique).
+- **Raison :** aucune requête externe, hors-ligne, poids maîtrisé.
+
+### P5-D2. Tranches horaires fixes
+
+- **Décision :** matin 6 h – 10 h, jour 10 h – 18 h, soir 18 h – 21 h, nuit 21 h – 6 h, à l'heure locale de l'appareil (`DAY_PERIOD_STARTS`, `src/themes/ambiance.ts`). Le moment est recalculé au prochain changement prévu (un seul minuteur) et au retour sur l'application. Le changement de palette est une transition de 2,4 s, seulement si les animations sont permises.
+- **Alternatives écartées :** heures de lever et de coucher du soleil (demande la position, donc une donnée de localisation) ; dégradé continu minute par minute (plus coûteux, peu perceptible) ; interrogation de l'heure chaque minute.
+- **Raison :** simple, prévisible, sans donnée personnelle.
+- **À vérifier :** le soir à 18 h paraît tôt en été et tard en hiver ; à ajuster si les retours le signalent.
+
+### P5-D3. Ambiance et mode sombre du téléphone : une règle simple
+
+- **Décision :** **le mode sombre du téléphone règle l'interface (cartes, textes, fonds) ; le réglage « Ambiance » règle seulement le décor (ciel, montagnes, étoiles).** Les deux sont indépendants. Le réglage propose : Automatique (selon l'heure, par défaut), Toujours jour, Toujours nuit. Il n'apparaît que pour un thème qui le déclare (`followsAmbiance`).
+- **Conséquence :** le provisoire de D24 (« mode sombre = nuit ») est remplacé : un téléphone en sombre à midi montre des cartes sombres avec un ciel de jour ; un téléphone en clair à 23 h montre des cartes claires avec un ciel étoilé.
+- **Alternatives écartées :**
+  - Mode sombre = nuit forcée en automatique : un utilisateur toujours en sombre ne verrait jamais le cycle.
+  - L'ambiance pilote aussi l'interface : on ignorerait un réglage d'accessibilité du téléphone, et chaque thème devrait fournir quatre jeux de jetons d'interface.
+- **Raison :** une phrase suffit à l'expliquer, le réglage du téléphone est toujours respecté, et les contrastes de l'interface restent ceux déjà testés.
+
+### P5-D4. Réglage « Ambiance » enregistré sur l'appareil, hors des données
+
+- **Décision :** le réglage est une préférence de l'appareil (clé `ascent:ambiance` du stockage local), ni exportée ni importée. Stockage indisponible : le réglage vaut jusqu'à la fermeture.
+- **Alternative écartée :** un champ dans `AppData.settings`. C'est un changement du schéma (version 2, migration, validation), que la règle de travail réserve à une validation explicite.
+- **À confirmer :** faut-il l'intégrer aux données (et donc à la sauvegarde) dans une prochaine version du schéma ?
+
+### P5-D5. Vie discrète et « une seule animation principale à la fois »
+
+- **Décision :**
+  - Sur « Aujourd'hui », le ciel des cartes est **immobile** (étoiles visibles le soir et la nuit, un nuage fixe) : l'animation principale reste le geste de l'alpiniste (D22).
+  - Dans le panorama, une seule animation d'ambiance : les nuages dérivent lentement (70 s) le matin, le jour et le soir ; la nuit, ils s'immobilisent et une étoile sur quatre scintille. Les alpinistes y sont immobiles.
+  - Parallaxe léger dans le panorama : en faisant défiler la rangée de montagnes, le plan lointain glisse à 25 % et le plan intermédiaire à 50 % de la vitesse.
+  - Tout est coupé si le réglage Animations est désactivé ou si l'appareil demande de réduire les animations, suivi en direct (CSS et `useMotionAllowed`) ; le parallaxe ne pose alors aucun écouteur.
+- **Alternatives écartées :** nuages animés dans chaque carte (plusieurs animations simultanées à l'écran, contraire au Doc 07) ; parallaxe au gyroscope (autorisation à demander sur iPhone, donnée de capteur) ; parallaxe au défilement vertical de l'écran « Aujourd'hui » (mouvement pendant la coche).
+- **Raison :** respecter le Doc 07 (« l'alpiniste bouge, le reste respire à peine ») et le budget de performance.
+
+### P5-D6. Vue panorama
+
+- **Décision :**
+  - Écran en lecture seule ouvert par un bouton « Panorama » en haut de « Aujourd'hui » (retour par « Retour », le focus revient sur le bouton). Ce n'est pas un nouvel onglet.
+  - Il montre les habitudes en cours et en pause (pas les archivées), chacune sur sa montagne avec son alpiniste, ses camps, sa flamme et une plaque à son nom (raccourci à 14 caractères). La rangée défile horizontalement au doigt : environ deux montagnes visibles en 360 px.
+  - Le décor est fourni par le thème (`Theme.Panorama`, décoratif, `aria-hidden`) ; l'interface donne les mêmes informations en texte sous le décor (nom, série, palier). Un thème sans panorama (Sobre) n'affiche pas le bouton.
+- **Alternatives écartées :** un onglet dédié (charge la barre d'onglets pour une vue de contemplation) ; toutes les montagnes réduites pour tenir dans la largeur (illisibles au-delà de trois habitudes).
+- **Raison :** c'est la vue « beau paysage » de la vision d'origine, sans rien retirer à la rapidité de l'écran « Aujourd'hui ».
+
+### P5-D7. Pipeline d'assets
+
+- **Décision :** manifeste TypeScript typé (`assets/manifest.ts`) : un identifiant par asset, qui est aussi le nom du fichier. Fichiers découverts à la compilation ; un fichier absent fait retomber la scène sur sa forme provisoire, tout comme un fichier qui ne se charge pas. Script d'optimisation sans dépendance (`npm run assets:optimize`, `npm run assets:check` en CI). Détails : `docs/pipeline-assets.md`.
+- **Branchement :** l'alpiniste (6 états), les camps, la flamme, le drapeau du sommet, les plans 1 et 2, les obstacles de tâche (variantes de la piste 4 : rocher, nuage bas, branche, éboulis) et les fanions de jalon retombent sur leur forme provisoire. Le sommet d'objectif, les plans 3 et 4 et les icônes de calendrier sont au manifeste mais pas encore affichés (pas de forme provisoire à remplacer).
+- **Alternatives écartées :** SVGO en dépendance (plus complet, mais dépendance ajoutée pour des fichiers encore inexistants ; à reconsidérer à l'arrivée des vrais visuels) ; SVG intégrés en composants React (le graphiste ne pourrait pas livrer un fichier seul) ; chargement à l'exécution avec test d'existence (requêtes réseau, scintillement).
+- **Raison :** l'illustrateur livre des fichiers, le code ne change pas, et l'application reste utilisable à chaque étape.
+
+### P5-D8. Budget de performance
+
+- **Décision :** seuils dans `assets/budget.ts` : 12 Ko par illustration, 150 Ko pour la scène, 40 Ko de polices, 130 Ko de JavaScript compressé, 12 Ko de CSS compressé ; 60 images par seconde visées et 50 au minimum sur un téléphone moyen ; aucune animation autre que `transform` et `opacity`. Vérifiés par les tests et par `npm run check:budget` (étape de la CI après le build). Les images par seconde se vérifient à la main (procédure dans `docs/pipeline-assets.md`).
+- **Raison :** des seuils chiffrés évitent que la scène s'alourdisse au fil des livraisons d'illustrations.
+
+### P5-D9. Contrastes dans les quatre ambiances
+
+- **Décision :** pour chaque palette (matin, jour, soir, nuit), testé : accent sur halo ≥ 3:1, tentes et sentier sur la montagne proche ≥ 3:1, texte des plaques du panorama ≥ 4,5:1 (encre `#1F2A4D` sur halo neige). L'interface ne dépend pas de l'ambiance (P5-D3) : ses contrastes restent ceux déjà testés en clair et en sombre.

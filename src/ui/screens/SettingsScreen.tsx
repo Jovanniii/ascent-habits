@@ -9,17 +9,24 @@ import {
   summarizeData,
   type DataSummary,
 } from '../../storage/index.ts'
-import { THEMES } from '../../themes/index.ts'
+import { THEMES, getTheme, type AmbianceMode } from '../../themes/index.ts'
 import { Dialog } from '../components/Dialog.tsx'
 import { downloadTextFile } from '../download.ts'
 import { formatFullDate, plural } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
+import { useAmbianceSetting } from '../state/useAmbiance.ts'
 import { useMotionAllowed } from '../state/useMotionAllowed.ts'
 
 type ImportState =
   | { kind: 'idle' }
   | { kind: 'invalid'; message: string; issues: string[] }
   | { kind: 'confirm'; data: AppData; exportedAt: string | null }
+
+const AMBIANCE_LABELS: Record<AmbianceMode, string> = {
+  auto: 'Automatique (selon l’heure)',
+  day: 'Toujours jour',
+  night: 'Toujours nuit',
+}
 
 function describe(summary: DataSummary): string {
   return [
@@ -36,6 +43,8 @@ export function SettingsScreen() {
   const fileInput = useRef<HTMLInputElement>(null)
   const animationsId = useId()
   const themeId = useId()
+  const ambianceId = useId()
+  const ambiance = useAmbianceSetting()
   const { systemReduced } = useMotionAllowed(data.settings.animationsEnabled)
 
   const exportData = (fileName = backupFileName(today)) => {
@@ -107,6 +116,29 @@ export function SettingsScreen() {
             ))}
           </select>
         </label>
+        {ambiance && getTheme(data.settings.themeId).followsAmbiance && (
+          <div className="field">
+            <label className="field__label" htmlFor={ambianceId}>
+              Ambiance
+            </label>
+            <select
+              id={ambianceId}
+              className="input"
+              aria-describedby={`${ambianceId}-hint`}
+              value={ambiance.mode}
+              onChange={(event) => ambiance.setMode(event.target.value as AmbianceMode)}
+            >
+              {(Object.keys(AMBIANCE_LABELS) as AmbianceMode[]).map((mode) => (
+                <option key={mode} value={mode}>
+                  {AMBIANCE_LABELS[mode]}
+                </option>
+              ))}
+            </select>
+            <p id={`${ambianceId}-hint`} className="field__hint">
+              Le décor suit l’heure : matin, jour, soir et nuit.
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="card section" aria-labelledby="settings-data">
