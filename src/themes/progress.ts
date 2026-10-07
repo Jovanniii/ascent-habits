@@ -18,6 +18,7 @@
 import {
   STREAK_TIERS,
   computeStreak,
+  countsForStreak,
   getRecoveryState,
   previousScheduledDay,
   tierForDuration,
@@ -305,7 +306,9 @@ export function deriveHabitProgress(
   const lastDay = previousScheduledDay(habit, today)
   let lastScheduledDay: ProgressInput['lastScheduledDay'] = 'none'
   if (recovery.status === 'available') lastScheduledDay = 'recoverable'
-  else if (lastDay !== null) lastScheduledDay = own.some((c) => c.date === lastDay) ? 'validated' : 'missed'
+  // Un jour noté « fait après coup » ne compte pas dans la série : il reste « manqué » ici.
+  else if (lastDay !== null)
+    lastScheduledDay = own.some((c) => c.date === lastDay && countsForStreak(c)) ? 'validated' : 'missed'
 
   const actual = computeHabitProgress(inputsFor(habit, own, streak, today, lastScheduledDay), tiers)
   if (recovery.status !== 'available') {

@@ -57,11 +57,12 @@ describe('previousScheduledDay', () => {
 })
 
 describe('validatedDates', () => {
-  it("ne retient que les validations de l'habitude, quel que soit leur type", () => {
+  it("ne retient que les validations de l'habitude qui comptent dans la série", () => {
     const dates = validatedDates('habit-1', [
       completion('2026-10-01'),
       completion('2026-10-02', 'recovery'),
       completion('2026-10-03', 'normal', 'autre'),
+      completion('2026-09-30', 'late'),
     ])
     expect([...dates].sort()).toEqual(['2026-10-01', '2026-10-02'])
   })

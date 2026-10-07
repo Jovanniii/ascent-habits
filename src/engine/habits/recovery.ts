@@ -12,7 +12,7 @@
 import { RECOVERY_LIMIT_PER_WEEK } from '../config.ts'
 import { addDays, isWithin, startOfIsoWeek, type LocalDate } from '../dates.ts'
 import type { Completion, Habit } from '../model.ts'
-import { previousScheduledDay } from './schedule.ts'
+import { countsForStreak, previousScheduledDay } from './schedule.ts'
 
 export type RecoveryState =
   /** Le jour manqué peut être rattrapé maintenant. */
@@ -22,8 +22,9 @@ export type RecoveryState =
   /** Un jour est manqué mais la limite hebdomadaire est atteinte. */
   | { status: 'limitReached'; missedDate: LocalDate }
   /**
-   * Rien à proposer : dernier jour prévu validé, aucune série à sauver (jour
-   * précédent non validé ou inexistant), aucun jour prévu, ou habitude inactive.
+   * Rien à proposer : dernier jour prévu validé (ou noté « fait après coup »),
+   * aucune série à sauver (jour précédent non validé ou inexistant), aucun jour
+   * prévu, ou habitude inactive.
    */
   | { status: 'none' }
 
@@ -60,9 +61,13 @@ export function getRecoveryState(
     return completion.kind === 'recovery' ? { status: 'recovered', missedDate } : { status: 'none' }
   }
   // Rattraper n'a de sens que s'il y a une série à sauver : le jour prévu qui
-  // précède le jour manqué doit être validé (normalement ou par rattrapage).
+  // précède le jour manqué doit être validé (normalement ou par rattrapage). Un
+  // jour noté « fait après coup » ne compte pas dans la série : il n'en ouvre pas.
   const dayBefore = previousScheduledDay(habit, missedDate)
-  if (dayBefore === null || !completions.some((c) => c.habitId === habit.id && c.date === dayBefore)) {
+  if (
+    dayBefore === null ||
+    !completions.some((c) => c.habitId === habit.id && c.date === dayBefore && countsForStreak(c))
+  ) {
     return { status: 'none' }
   }
   if (recoveriesUsedInWeek(habit.id, completions, missedDate) >= limitPerWeek) {

@@ -230,3 +230,30 @@ describe('getRecoveryState : seulement s’il existe une série à sauver', () =
     expect(getRecoveryState(mwf, completionsOn(['2026-09-28']), TODAY)).toEqual({ status: 'none' })
   })
 })
+
+describe('getRecoveryState : jours notés « fait après coup »', () => {
+  const habit = makeHabit()
+
+  it("un jour noté après coup n'ouvre pas de rattrapage pour le jour suivant", () => {
+    // 1er octobre validé, 2 octobre noté après coup, 3 octobre manqué : aucune série à sauver.
+    const completions = [completion('2026-10-01'), completion('2026-10-02', 'late')]
+    expect(getRecoveryState(habit, completions, TODAY)).toEqual({ status: 'none' })
+  })
+
+  it('un jour manqué noté après coup ne propose plus rien', () => {
+    const completions = [...completionsBetween('2026-09-25', '2026-10-02'), completion('2026-10-03', 'late')]
+    expect(getRecoveryState(habit, completions, TODAY)).toEqual({ status: 'none' })
+  })
+
+  it('un jour noté après coup ne consomme pas le quota hebdomadaire', () => {
+    const completions = [completion('2026-09-29', 'late'), ...completionsBetween('2026-09-30', '2026-10-02')]
+    expect(recoveriesUsedInWeek('habit-1', completions, TODAY)).toBe(0)
+    expect(getRecoveryState(habit, completions, TODAY).status).toBe('available')
+  })
+
+  it('un jour noté après coup ne compte pas dans la série', () => {
+    const completions = [...completionsBetween('2026-09-25', '2026-10-01'), completion('2026-10-02', 'late'), completion('2026-10-03')]
+    expect(computeStreak(habit, completions, TODAY).current).toBe(1)
+    expect(computeStreak(habit, completions, TODAY).best).toBe(7)
+  })
+})

@@ -9,8 +9,10 @@ import {
   cancelRecovery,
   createHabit,
   deleteHabit,
+  logLateDay,
   pauseHabit,
   recoverMissedDay,
+  removeLateDay,
   restoreHabit,
   resumeHabit,
   toggleHabitToday,
@@ -181,6 +183,58 @@ describe('recoverMissedDay et cancelRecovery', () => {
 
   it("refuse d'annuler quand aucun rattrapage n'a été fait", () => {
     expectCommandError(() => cancelRecovery(missedYesterday, 'habit-1', makeContext()), 'invalid-state')
+  })
+})
+
+describe('logLateDay et removeLateDay', () => {
+  const ctx = makeContext(TODAY)
+
+  it('note un jour passé prévu, sans effet sur la série', () => {
+    // 28 et 29 septembre manqués : le 29 n'est pas rattrapable (pas de série à sauver).
+    const data = withHabit({ completions: [completion('2026-09-27')] })
+    const next = logLateDay(data, 'habit-1', '2026-09-28', ctx)
+    expect(next.completions).toContainEqual(completion('2026-09-28', 'late'))
+    expect(streakOf(next)).toBe(0)
+    expect(data.completions).toHaveLength(1)
+  })
+
+  it('refuse aujourd’hui, un jour futur, un jour non prévu et un jour avant la création', () => {
+    const data = withHabit({ habits: [makeHabit({ frequency: { type: 'specificDays', days: [1] } })] })
+    expectCommandError(() => logLateDay(data, 'habit-1', TODAY, ctx), 'invalid-date')
+    expectCommandError(() => logLateDay(data, 'habit-1', '2026-10-05', ctx), 'invalid-date')
+    expectCommandError(() => logLateDay(data, 'habit-1', '2026-10-01', ctx), 'not-scheduled')
+    expectCommandError(() => logLateDay(data, 'habit-1', '2026-08-31', ctx), 'not-scheduled')
+  })
+
+  it('refuse un jour déjà validé', () => {
+    const data = withHabit({ completions: [completion('2026-10-01')] })
+    expectCommandError(() => logLateDay(data, 'habit-1', '2026-10-01', ctx), 'invalid-state')
+  })
+
+  it('refuse un jour rattrapable : le rattrapage préserve la série', () => {
+    const data = withHabit({ completions: completionsBetween('2026-09-28', '2026-10-02') })
+    expectCommandError(() => logLateDay(data, 'habit-1', '2026-10-03', ctx), 'invalid-state')
+  })
+
+  it('accepte un jour manqué quand la limite de rattrapage est atteinte', () => {
+    const data = withHabit({
+      completions: [...completionsBetween('2026-09-28', '2026-09-29'), completion('2026-09-30', 'recovery'), ...completionsBetween('2026-10-01', '2026-10-02')],
+    })
+    const next = logLateDay(data, 'habit-1', '2026-10-03', ctx)
+    expect(next.completions).toContainEqual(completion('2026-10-03', 'late'))
+  })
+
+  it('accepte une habitude archivée, pour un jour où elle était prévue', () => {
+    const data = withHabit({ habits: [makeHabit({ status: 'archived', pauses: [{ from: '2026-10-02' }] })] })
+    expect(logLateDay(data, 'habit-1', '2026-10-01', ctx).completions).toHaveLength(1)
+    expectCommandError(() => logLateDay(data, 'habit-1', '2026-10-03', ctx), 'not-scheduled')
+  })
+
+  it('retire uniquement un jour noté après coup', () => {
+    const data = withHabit({ completions: [completion('2026-10-01', 'late'), completion('2026-10-02')] })
+    expect(removeLateDay(data, 'habit-1', '2026-10-01').completions).toEqual([completion('2026-10-02')])
+    expectCommandError(() => removeLateDay(data, 'habit-1', '2026-10-02'), 'invalid-state')
+    expectCommandError(() => removeLateDay(data, 'inconnue', '2026-10-01'), 'not-found')
   })
 })
 

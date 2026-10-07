@@ -37,11 +37,19 @@ export function previousScheduledDay(habit: ScheduleSource, date: LocalDate): Lo
   return null
 }
 
-/** Dates validées (normalement ou par rattrapage) pour une habitude. */
+/** Vrai si la validation compte dans la série (normale ou rattrapage, pas « fait après coup »). */
+export function countsForStreak(completion: Pick<Completion, 'kind'>): boolean {
+  return completion.kind !== 'late'
+}
+
+/**
+ * Dates validées normalement ou par rattrapage pour une habitude : celles qui
+ * comptent dans la série. Les jours notés « fait après coup » en sont exclus.
+ */
 export function validatedDates(habitId: string, completions: readonly Completion[]): Set<LocalDate> {
   const dates = new Set<LocalDate>()
   for (const completion of completions) {
-    if (completion.habitId === habitId) {
+    if (completion.habitId === habitId && countsForStreak(completion)) {
       dates.add(completion.date)
     }
   }
