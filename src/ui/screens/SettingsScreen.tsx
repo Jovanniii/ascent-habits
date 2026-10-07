@@ -9,6 +9,7 @@ import {
   summarizeData,
   type DataSummary,
 } from '../../storage/index.ts'
+import { anonymousStatsFileName, createAnonymousStats, serializeAnonymousStats } from '../../storage/anonymousStats.ts'
 import { THEMES, getTheme, type AmbianceMode } from '../../themes/index.ts'
 import { Dialog } from '../components/Dialog.tsx'
 import { downloadTextFile } from '../download.ts'
@@ -49,6 +50,15 @@ export function SettingsScreen() {
 
   const exportData = (fileName = backupFileName(today)) => {
     downloadTextFile(fileName, serializeBackup(createBackup(data, now().toISOString())))
+  }
+
+  const exportStats = () => {
+    const stats = createAnonymousStats(data, {
+      today,
+      appVersion: __APP_VERSION__,
+      knownThemeIds: THEMES.map((theme) => theme.id),
+    })
+    downloadTextFile(anonymousStatsFileName(today), serializeAnonymousStats(stats))
   }
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +173,19 @@ export function SettingsScreen() {
             aria-label="Fichier de sauvegarde à importer"
             onChange={handleFile}
           />
+        </div>
+      </section>
+
+      <section className="card section" aria-labelledby="settings-stats">
+        <h2 id="settings-stats" className="section__title">Statistiques anonymes</h2>
+        <p className="section__text">
+          Pour aider à améliorer Ascent, ce fichier contient seulement des dates, des nombres et le thème choisi :
+          aucun nom d’habitude, de tâche ou d’objectif. Rien n’est envoyé : vous choisissez de le partager ou non.
+        </p>
+        <div className="actions actions--wrap">
+          <button type="button" className="button button--secondary" onClick={exportStats}>
+            Exporter mes statistiques anonymes
+          </button>
         </div>
       </section>
 
