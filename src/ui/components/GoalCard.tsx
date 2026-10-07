@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type ComponentType, type FormEvent } from 'react'
 import {
   MAX_NAME_LENGTH,
+  toLocalDate,
   addMilestone,
   computeGoalProgress,
   deleteGoal,
@@ -12,17 +13,33 @@ import {
   type Goal,
   type Milestone,
 } from '../../engine/index.ts'
+import { getTheme, type GoalSceneProps } from '../../themes/index.ts'
 import { formatFullDate, plural } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
+import { useMotionAllowed } from '../state/useMotionAllowed.ts'
 import { Dialog } from './Dialog.tsx'
 import { ProgressBar } from './ProgressBar.tsx'
 
 interface Props {
   goal: Goal
+  /** Appelé juste après « Marquer comme atteint » (célébration, focus). */
+  onAchieved?: (goal: Goal) => void
 }
 
-export function GoalCard({ goal }: Props) {
+/** Durée de la célébration qui suit « Marquer comme atteint ». */
+export const CELEBRATION_DURATION_MS = 1800
+
+/** « Atteint le 7 octobre 2026 », d'après l'instant enregistré. */
+function achievedText(goal: Goal): string | null {
+  if (!goal.achievedAt) return null
+  const instant = new Date(goal.achievedAt)
+  return Number.isNaN(instant.getTime()) ? null : `Atteint le ${formatFullDate(toLocalDate(instant))}`
+}
+
+export function GoalCard({ goal, onAchieved }: Props) {
   const { data, run } = useAppStore()
+  const { allowed: motionAllowed } = useMotionAllowed(data.settings.animationsEnabled)
+  const GoalScene = getTheme(data.settings.themeId).GoalScene
   const [newMilestone, setNewMilestone] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
@@ -44,22 +61,46 @@ export function GoalCard({ goal }: Props) {
     <li className="card goal" data-status={goal.status}>
       <div className="goal__header">
         <h3 className="goal__name">{goal.name}</h3>
-        {goal.dueDate && <p className="goal__meta">Échéance : {formatFullDate(goal.dueDate)}</p>}
+        {achieved
+          ? achievedText(goal) && <p className="goal__meta">{achievedText(goal)}</p>
+          : goal.dueDate && <p className="goal__meta">Échéance : {formatFullDate(goal.dueDate)}</p>}
       </div>
 
-      <ProgressBar percent={progress.percent} label={`Progression de « ${goal.name} »`} />
-      <p className="goal__meta">
-        {progress.total === 0
-          ? 'Aucun jalon pour l’instant.'
-          : `${progress.done} ${progress.done > 1 ? 'jalons terminés' : 'jalon terminé'} sur ${progress.total} · ${progress.percent} %`}
-      </p>
+      {GoalScene && (
+        <div className="goal__scene">
+          <GoalScene progress={progress} achieved={achieved} celebrating={false} motionAllowed={motionAllowed} />
+        </div>
+      )}
 
-      {milestones.length > 0 && (
-        <ul className="milestones">
-          {milestones.map((milestone) => (
-            <MilestoneItem key={milestone.id} milestone={milestone} readOnly={achieved} />
-          ))}
-        </ul>
+      {achieved ? (
+        // Trophée : vue compacte, jalons consultables à la demande.
+        milestones.length > 0 && (
+          <details className="disclosure">
+            <summary>Jalons ({milestones.length})</summary>
+            <ul className="milestones">
+              {milestones.map((milestone) => (
+                <MilestoneItem key={milestone.id} milestone={milestone} readOnly />
+              ))}
+            </ul>
+          </details>
+        )
+      ) : (
+        <>
+          <ProgressBar percent={progress.percent} label={`Progression de « ${goal.name} »`} />
+          <p className="goal__meta">
+            {progress.total === 0
+              ? 'Aucun jalon pour l’instant.'
+              : `${progress.done} ${progress.done > 1 ? 'jalons terminés' : 'jalon terminé'} sur ${progress.total} · ${progress.percent} %`}
+          </p>
+
+          {milestones.length > 0 && (
+            <ul className="milestones">
+              {milestones.map((milestone) => (
+                <MilestoneItem key={milestone.id} milestone={milestone} readOnly={false} />
+              ))}
+            </ul>
+          )}
+        </>
       )}
 
       {!achieved && (
@@ -104,7 +145,11 @@ export function GoalCard({ goal }: Props) {
           <button
             type="button"
             className={`button ${progress.allDone ? 'button--primary' : 'button--secondary'}`}
-            onClick={() => run((d, ctx) => markGoalAchieved(d, goal.id, ctx), `« ${goal.name} » est atteint. Bravo !`)}
+            onClick={() => {
+              if (run((d, ctx) => markGoalAchieved(d, goal.id, ctx), `« ${goal.name} » est atteint. Bravo !`)) {
+                onAchieved?.(goal)
+              }
+            }}
           >
             Marquer comme atteint
           </button>
@@ -131,6 +176,46 @@ export function GoalCard({ goal }: Props) {
           </button>
         </div>
       </Dialog>
+    </li>
+  )
+}
+
+interface CelebrationProps {
+  goal: Goal
+  Scene?: ComponentType<GoalSceneProps>
+  onDone: (goalId: string) => void
+}
+
+/**
+ * Copie décorative d'un objectif qui vient d'être atteint : elle reste un instant
+ * à sa place dans « En cours » pour la célébration, pendant que le vrai objectif
+ * rejoint le tableau de trophées. Masquée aux lecteurs d'écran (le message
+ * « … est atteint. Bravo ! » est annoncé), sans élément interactif.
+ */
+export function GoalCelebration({ goal, Scene, onDone }: CelebrationProps) {
+  const { data } = useAppStore()
+  const progress = computeGoalProgress(goal.id, data.milestones)
+
+  useEffect(() => {
+    const timer = setTimeout(() => onDone(goal.id), CELEBRATION_DURATION_MS)
+    return () => clearTimeout(timer)
+  }, [goal.id, onDone])
+
+  return (
+    <li className="card goal goal--celebrating" aria-hidden="true">
+      <p className="goal__name">{goal.name}</p>
+      {Scene ? (
+        <div className="goal__scene">
+          <Scene progress={progress} achieved celebrating motionAllowed />
+        </div>
+      ) : (
+        <span className="goal__badge">
+          <svg viewBox="0 0 24 24" className="check__icon">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        </span>
+      )}
+      <p className="callout">Objectif atteint. Bravo !</p>
     </li>
   )
 }

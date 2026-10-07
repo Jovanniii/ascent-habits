@@ -16,7 +16,7 @@ import {
 } from './geometry.ts'
 
 /** Pose de l'alpiniste selon l'état neutre de progression. */
-type Pose = 'rest' | 'walk' | 'bivouac' | 'tent' | 'celebrate'
+export type Pose = 'rest' | 'walk' | 'bivouac' | 'tent' | 'celebrate'
 
 const POSES: Record<HabitSceneProps['progress']['state'], Pose> = {
   idle: 'rest',
@@ -55,7 +55,7 @@ function Flame({ intensity }: { intensity: 1 | 2 }) {
   )
 }
 
-function Climber({ pose }: { pose: Pose }) {
+export function Climber({ pose }: { pose: Pose }) {
   if (pose === 'tent') {
     // Au repos à la tente : rien d'un échec, simplement une pause.
     return (

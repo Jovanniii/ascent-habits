@@ -1,0 +1,145 @@
+/*
+ * Obstacles des tâches (thème montagne, visuels provisoires).
+ * Une tâche en retard garde exactement le même rendu : aucune couleur d'alerte.
+ * L'accent rouge orangé n'est pas utilisé ici (réservé à l'alpiniste et au drapeau).
+ */
+
+.task-obstacle {
+  --obstacle-sky: #eceff5;
+  --obstacle-ground: #c5cede;
+  --obstacle-trail: #f7f4ef;
+  --obstacle-rock: #4f6d8f;
+  --obstacle-detail: #a8b8d8;
+  --obstacle-cloud: #ffffff;
+  --obstacle-cloud-edge: #a8b8d8;
+  --obstacle-wood: #6b5a4a;
+  --obstacle-leaf: #7f9a7a;
+  display: block;
+  width: 56px;
+  height: 44px;
+  flex: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .task-obstacle {
+    --obstacle-sky: #303d68;
+    --obstacle-ground: #3e4f7a;
+    --obstacle-trail: #a8b8d8;
+    --obstacle-rock: #a8b8d8;
+    --obstacle-detail: #4f6d8f;
+    --obstacle-cloud: #c4cce0;
+    --obstacle-cloud-edge: #55648f;
+    --obstacle-wood: #c9b49a;
+    --obstacle-leaf: #a9c2a3;
+  }
+}
+
+.task-obstacle__sky {
+  fill: var(--obstacle-sky);
+}
+
+.task-obstacle__ground {
+  fill: var(--obstacle-ground);
+}
+
+.task-obstacle__trail {
+  fill: none;
+  stroke: var(--obstacle-trail);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 3.2;
+}
+
+.task-obstacle__rock {
+  fill: var(--obstacle-rock);
+}
+
+.task-obstacle__detail {
+  fill: none;
+  stroke: var(--obstacle-detail);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.task-obstacle__cloud {
+  fill: var(--obstacle-cloud);
+  stroke: var(--obstacle-cloud-edge);
+  stroke-width: 1;
+}
+
+.task-obstacle__wood,
+.task-obstacle__twig {
+  fill: none;
+  stroke: var(--obstacle-wood);
+  stroke-linecap: round;
+}
+
+.task-obstacle__wood {
+  stroke-width: 3.2;
+}
+
+.task-obstacle__twig {
+  stroke-width: 1.6;
+}
+
+.task-obstacle__leaf {
+  fill: var(--obstacle-leaf);
+}
+
+.task-obstacle__shape {
+  transform-box: view-box;
+  transform-origin: 28px 34px;
+}
+
+/* Sans animation, l'obstacle dégagé disparaît simplement. */
+.task-obstacle[data-clearing='true'] .task-obstacle__shape {
+  opacity: 0;
+}
+
+@keyframes task-obstacle-roll {
+  to {
+    transform: translate(26px, 2px) rotate(70deg);
+    opacity: 0;
+  }
+}
+
+@keyframes task-obstacle-lift {
+  to {
+    transform: translateY(-10px) scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes task-obstacle-swing {
+  to {
+    transform: rotate(-28deg) translateY(-6px);
+    opacity: 0;
+  }
+}
+
+@keyframes task-obstacle-slide {
+  to {
+    transform: translate(18px, 6px);
+    opacity: 0;
+  }
+}
+
+/* Animations en « opt-in », comme le reste du thème. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .task-obstacle[data-motion='on'][data-clearing='true'] .task-obstacle__shape {
+    opacity: 1;
+    animation: task-obstacle-roll 600ms ease-in forwards;
+  }
+
+  :root[data-motion='full'] .task-obstacle[data-motion='on'][data-clearing='true'][data-variant='low-cloud'] .task-obstacle__shape {
+    animation-name: task-obstacle-lift;
+  }
+
+  :root[data-motion='full'] .task-obstacle[data-motion='on'][data-clearing='true'][data-variant='branch'] .task-obstacle__shape {
+    animation-name: task-obstacle-swing;
+  }
+
+  :root[data-motion='full'] .task-obstacle[data-motion='on'][data-clearing='true'][data-variant='scree'] .task-obstacle__shape {
+    animation-name: task-obstacle-slide;
+  }
+}

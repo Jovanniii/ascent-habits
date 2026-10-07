@@ -268,3 +268,53 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 | Thème « Sobre » provisoire, décrit par des jetons de couleur | Valide le mécanisme de thème interchangeable avant le thème illustré | — |
 | Moteur isolé par une règle ESLint et un test garde-fou (aucune référence au thème) | Règle du CLAUDE.md vérifiée automatiquement | Simple convention |
 | TypeScript 6.0 plutôt que 7 | typescript-eslint ne prend pas encore en charge TypeScript 7 | — |
+
+---
+
+## Piste 4 : tâches en obstacles, objectifs en sommet (octobre 2026)
+
+### P4-D1. Contrat de thème : deux emplacements optionnels
+
+- **Décision :** `Theme` gagne `TaskIllustration` (illustration d'une tâche à faire, à partir de `taskId`, `clearing`, `motionAllowed`) et `GoalScene` (scène d'un objectif, à partir de `GoalProgress` du moteur, `achieved`, `celebrating`, `motionAllowed`). Les deux sont décoratifs (`aria-hidden`) et facultatifs : sans eux, l'interface sobre s'affiche. Ajout seulement dans `src/themes/types.ts`, rien de réorganisé.
+- **Alternative écartée :** confier au thème la case à cocher ou la liste des jalons (même raison que D20 : accessibilité à réimplémenter par chaque thème).
+- **Raison :** même principe que D20, l'interface garde tout ce qui est interactif et textuel.
+
+### P4-D2. Position de l'alpiniste et hauteur du sommet d'un objectif
+
+- **Décision :**
+  - Le sentier est fixe. Le jalon terminé n° k correspond toujours au même point : `stepAt(k) = k / (k + 3)` (fraction du sentier). L'alpiniste est à `stepAt(jalons terminés)` : position **absolue**, indépendante du total.
+  - Le sommet est un pas après le dernier jalon : `stepAt(total + 1)`. Ajouter un jalon le repousse plus haut et plus loin (« plus haut que prévu ») ; l'alpiniste ne bouge pas, seule la jauge baisse.
+  - À 100 %, l'alpiniste est au dernier fanion, juste sous le sommet, et « Marquer comme atteint » est suggéré. Le dernier pas jusqu'au sommet, c'est cette action (cohérent avec D6). Un objectif atteint place l'alpiniste au sommet, même s'il restait des jalons.
+  - `stepAt` tend vers 1 sans l'atteindre : le sommet reste toujours dans le cadre. Les premiers jalons font de grands pas, les suivants des pas plus courts (perspective).
+  - Les fanions sont comptés, pas nommés : les k premiers fanions sont « plantés » quand k jalons sont terminés, quel que soit l'ordre.
+  - Décocher ou supprimer un jalon **terminé** fait redescendre l'alpiniste d'un fanion : c'est une correction volontaire de l'historique, comme D17. Supprimer un jalon à faire abaisse seulement le sommet.
+  - Calcul : fonction pure `goalLayout` (`src/themes/mountain/goals/geometry.ts`), testée.
+- **Alternatives écartées :**
+  - Position en pourcentage (`terminés / total`) : l'alpiniste recule à chaque ajout, contraire à la règle actée.
+  - Mémoriser la position la plus haute atteinte : demande un nouveau champ, donc une version 2 du schéma.
+  - Sommet à `stepAt(total)` : l'alpiniste serait au sommet avant que l'utilisateur ne déclare l'objectif atteint.
+- **À vérifier en bêta :** le sommet qui grandit est-il compris comme « plus haut que prévu » et non comme « plus loin, donc moins avancé » ?
+
+### P4-D3. Obstacles des tâches et dégagement
+
+- **Décision :**
+  - Quatre obstacles (rocher, nuage bas, branche, éboulis), choisis par une empreinte FNV-1a de l'identifiant de la tâche : stables d'une ouverture à l'autre, rien n'est enregistré.
+  - Cocher fait passer la tâche dans « Terminées » immédiatement (données, focus et annonce inchangés) ; une **copie décorative** (`aria-hidden`, sans élément interactif) reste 0,7 s à sa place pour jouer le dégagement. Sans animation, aucune copie.
+  - Une tâche en retard est dessinée exactement comme les autres.
+  - Les obstacles s'affichent sur l'écran Tâches seulement, pas sur « Aujourd'hui ».
+- **Alternative écartée :** retarder la coche réelle le temps de l'animation : la coche serait perdue si l'application est fermée, et le focus deviendrait imprévisible.
+- **Raison :** satisfaction visuelle sans rien changer à l'accessibilité ni à la rapidité.
+
+### P4-D4. Objectif atteint et tableau de trophées
+
+- **Décision :**
+  - « Marquer comme atteint » reste l'action explicite (D6), mise en avant à 100 %. L'objectif rejoint aussitôt le **tableau de trophées** (nouveau nom de « Objectifs atteints ») et le focus va à ce titre.
+  - Une copie décorative joue la célébration 1,8 s à sa place dans « En cours » : alpiniste qui saute au sommet et drapeau qui flotte (montagne), pastille ✓ qui apparaît (thème sobre). Le message « … est atteint. Bravo ! » est annoncé comme avant.
+  - Un trophée est compact : nom, date d'atteinte, scène au sommet, jalons repliés, « Remettre en cours » et « Supprimer ».
+- **Alternative écartée :** une fenêtre de célébration plein écran, plus intrusive et à fermer.
+
+### P4-D5. Jalons depuis la scène ou la liste
+
+- **Décision :** la scène est décorative ; ajout, renommage, suppression et coche passent par la liste accessible placée juste sous la scène, dans la même carte.
+- **Alternative écartée :** des fanions cliquables dans la scène : petites cibles tactiles, et les fanions sont comptés (P4-D2), pas liés à un jalon précis.
+- **À confirmer :** si une interaction directe dans la scène est souhaitée (par exemple un bouton « + » sur le sentier).

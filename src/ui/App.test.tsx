@@ -290,7 +290,7 @@ describe('objectifs', () => {
     expect(screen.getByText('Tous les jalons sont terminés.')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Marquer comme atteint' }))
-    expect(screen.getByRole('heading', { name: 'Objectifs atteints' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tableau de trophées' })).toBeInTheDocument()
   })
 })
 
