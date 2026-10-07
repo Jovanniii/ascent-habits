@@ -93,6 +93,13 @@ describe('MountainScene', () => {
     expect(reduced).toHaveAttribute('data-motion', 'off')
   })
 
+  it('ne décale pas les animations de geste (décalage réservé à la respiration)', () => {
+    const svg = scene(props({ currentDurationDays: 1, today: 'done' }, { gesture: { kind: 'checked', id: 1 }, index: 3 }))
+    const climber = svg.querySelector('.mountain-scene__climber') as SVGGElement
+    expect(climber.style.animationDelay).toBe('')
+    expect(climber.style.getPropertyValue('--mountain-breath-delay')).toBe('-2100ms')
+  })
+
   it('positionne l’alpiniste par une transformation CSS (animable), jamais par SMIL', () => {
     const svg = scene(props({ currentDurationDays: 40 }))
     expect((svg.querySelector('.mountain-scene__position') as SVGGElement).style.transform).toMatch(/^translate\(/)

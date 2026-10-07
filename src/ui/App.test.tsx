@@ -88,6 +88,16 @@ describe('habitudes', () => {
     expect(screen.getByRole('button', { name: 'Rattraper samedi pour « Lire »' })).toBeInTheDocument()
   })
 
+  it('célèbre un palier atteint grâce à un rattrapage, même après la coche du jour', async () => {
+    const habit = { ...readingHabit, createdOn: '2026-09-14' }
+    // 19 jours validés jusqu'au 2 octobre, samedi 3 manqué : cocher aujourd'hui puis rattraper.
+    const { user } = await renderApp(dataWith({ habits: [habit], completions: daily('2026-09-14', '2026-10-02') }))
+    await user.click(screen.getByRole('button', { name: "Valider « Lire » pour aujourd'hui" }))
+    await user.click(screen.getByRole('button', { name: 'Rattraper samedi pour « Lire »' }))
+    expect(screen.getByText('Samedi rattrapé. Nouveau palier atteint pour « Lire » : 21 jours. Bravo !')).toBeInTheDocument()
+    expect(screen.getByText('21 validations')).toBeInTheDocument()
+  })
+
   it('ne propose pas de rattrapage quand il n’y a aucune série à sauver', async () => {
     // Rattrapage déjà utilisé le 29 septembre, puis 2 et 3 octobre manqués : rattraper
     // le 3 ne sauverait aucune série, et la limite de la semaine n'est pas affichée.

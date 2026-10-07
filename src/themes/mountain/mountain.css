@@ -176,6 +176,6 @@
   /* Respiration discrète, seulement au repos et hors geste : une seule animation à la fois. */
   :root[data-motion='full'] .mountain-scene[data-motion='on'] .mountain-scene__climber[data-gesture='none'] .is-rest {
     animation: mountain-breath 4s ease-in-out infinite;
-    animation-delay: inherit;
+    animation-delay: var(--mountain-breath-delay, 0s);
   }
 }

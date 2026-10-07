@@ -1,15 +1,13 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import {
   cancelRecovery,
-  computeStreak,
-  getRecoveryState,
   recoverMissedDay,
   resumeHabit,
   toggleHabitToday,
   type Habit,
 } from '../../engine/index.ts'
 import { deriveHabitProgress, getTheme, type HabitGesture, type HabitProgress } from '../../themes/index.ts'
-import { TIER_LABELS, capitalize, formatFrequency, formatMissedDay, formatStage, formatValidations, plural } from '../format.ts'
+import { capitalize, formatFrequency, formatMissedDay, formatStage, formatValidations, plural } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
 import { useMotionAllowed } from '../state/useMotionAllowed.ts'
 import { HabitManageDialog } from './HabitManageDialog.tsx'
@@ -37,7 +35,14 @@ function nextStageText(progress: HabitProgress): string {
 /** Version courte sur une ligne, pour la carte illustrée (la version complète est lue par les lecteurs d'écran). */
 function compactTiersText(progress: HabitProgress): string {
   const next = `${formatStage(progress.next)} dans ${progress.next.daysRemaining} j`
-  return progress.decorTier ? `Palier ${TIER_LABELS[progress.decorTier.id]} · prochain ${next}` : `Prochain palier ${next}`
+  return progress.highestStage ? `Palier ${formatStage(progress.highestStage)} · prochain ${next}` : `Prochain palier ${next}`
+}
+
+/** Message positif quand une action fait atteindre une nouvelle étape. */
+function celebrationText(habit: Habit, progress: HabitProgress): string | undefined {
+  return progress.celebrated
+    ? `Nouveau palier atteint pour « ${habit.name} » : ${formatStage(progress.celebrated)}. Bravo !`
+    : undefined
 }
 
 export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
@@ -53,9 +58,9 @@ export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
     return () => clearTimeout(timer)
   }, [gesture])
 
-  const streak = computeStreak(habit, data.completions, today)
-  const progress = deriveHabitProgress(habit, data.completions, today)
-  const recovery = getRecoveryState(habit, data.completions, today)
+  // Recalcul seulement quand l'habitude, ses données ou le jour changent (pas à chaque message).
+  const progress = useMemo(() => deriveHabitProgress(habit, data.completions, today), [habit, data.completions, today])
+  const { streak, recovery } = progress
   const canCheck = habit.status === 'active' && streak.today !== 'unscheduled'
   const done = streak.today === 'done'
   const HabitScene = variant === 'today' && canCheck ? getTheme(data.settings.themeId).HabitScene : undefined
@@ -63,17 +68,13 @@ export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
   const toggle = () => {
     const checking = !done
     // Un palier atteint grâce à cette coche est annoncé, avec un message positif.
-    let feedback: string | undefined
-    if (checking) {
-      const after = deriveHabitProgress(
-        habit,
-        [...data.completions, { habitId: habit.id, date: today, kind: 'normal' }],
-        today,
-      ).actual
-      if (after.celebrated) {
-        feedback = `Nouveau palier atteint pour « ${habit.name} » : ${formatStage(after.celebrated)}. Bravo !`
-      }
-    }
+    const feedback = checking
+      ? celebrationText(
+          habit,
+          deriveHabitProgress(habit, [...data.completions, { habitId: habit.id, date: today, kind: 'normal' }], today)
+            .actual,
+        )
+      : undefined
     if (run((d, ctx) => toggleHabitToday(d, habit.id, ctx), feedback)) {
       gestureCounter += 1
       setGesture({ kind: checking ? 'checked' : 'unchecked', id: gestureCounter })
@@ -95,8 +96,8 @@ export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
       </svg>
     </button>
   )
-  const highestText = progress.actual.decorTier
-    ? `Plus haut palier atteint : ${TIER_LABELS[progress.actual.decorTier.id]}`
+  const highestText = progress.actual.highestStage
+    ? `Plus haut palier atteint : ${formatStage(progress.actual.highestStage)}`
     : null
 
   return (
@@ -180,12 +181,18 @@ export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
           type="button"
           className="button button--secondary button--small"
           aria-label={`Rattraper ${formatMissedDay(recovery.missedDate, today)} pour « ${habit.name} »`}
-          onClick={() =>
-            run(
-              (d, ctx) => recoverMissedDay(d, habit.id, ctx),
-              `${capitalize(formatMissedDay(recovery.missedDate, today))} rattrapé.`,
-            )
-          }
+          onClick={() => {
+            // Si la coche du jour est déjà faite, le rattrapage peut faire atteindre un palier :
+            // il est célébré comme une coche, quel que soit l'ordre des gestes.
+            const after = deriveHabitProgress(
+              habit,
+              [...data.completions, { habitId: habit.id, date: recovery.missedDate, kind: 'recovery' }],
+              today,
+            ).actual
+            const recovered = `${capitalize(formatMissedDay(recovery.missedDate, today))} rattrapé.`
+            const celebration = celebrationText(habit, after)
+            run((d, ctx) => recoverMissedDay(d, habit.id, ctx), celebration ? `${recovered} ${celebration}` : recovered)
+          }}
         >
           Rattraper {formatMissedDay(recovery.missedDate, today)}
         </button>

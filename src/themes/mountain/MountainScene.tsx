@@ -2,7 +2,7 @@
  * Panorama provisoire d'une habitude : formes SVG simples, purement décoratives
  * (aria-hidden). Les informations utiles sont données en texte par l'interface.
  */
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 import type { HabitSceneProps } from '../types.ts'
 import {
   VIEWBOX_HEIGHT,
@@ -151,7 +151,9 @@ export function MountainScene({ progress, gesture, motionAllowed, index }: Habit
           key={gesture?.id ?? 'idle'}
           className="mountain-scene__climber"
           data-gesture={gesture?.kind ?? 'none'}
-          style={{ animationDelay: `${-(index % 6) * BREATH_OFFSET_MS}ms` }}
+          // Variable CSS lue seulement par la respiration : un animation-delay posé ici
+          // décalerait aussi les animations de geste, qui seraient alors invisibles.
+          style={{ '--mountain-breath-delay': `${-(index % 6) * BREATH_OFFSET_MS}ms` } as CSSProperties}
         >
           <Climber pose={pose} />
         </g>

@@ -189,7 +189,7 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
   - L'alpiniste se place selon la **progression de la série actuelle vers le prochain palier**.
   - **Si la série se brise, il revient au dernier camp atteint**, jamais au pied. Avec la nouvelle série, il **repart de ce camp vers le camp suivant, au prorata de la nouvelle série** : position = camp + (camp suivant − camp) × série / camp suivant. Il atteint le camp suivant exactement quand la série atteint le palier correspondant, sans saut ensuite.
   - Le texte « Prochain palier » vise le même camp que l'image, dans les deux thèmes : après une rupture, un palier déjà acquis n'est plus présenté comme « prochain ».
-  - **Au-delà d'un an :** 365 jours = sommet (avec célébration) ; 366 jours = pied d'une nouvelle montagne plus haute, dont le sommet compte aussi comme camp (730, 1 095 jours…). La hauteur visuelle est plafonnée.
+  - **Au-delà d'un an :** 365 jours = sommet (avec célébration) ; 366 jours = pied d'une nouvelle montagne plus haute, dont le sommet compte aussi comme camp (730, 1 095 jours…) et s'affiche comme palier (« 2 ans »). La hauteur visuelle est plafonnée.
   - Calcul : fonctions pures `computeHabitProgress` et `deriveHabitProgress` (`src/themes/progress.ts`), sans modification du moteur, testées (série à zéro, entre deux paliers, palier atteint, saut de durée, rupture après palier, reprise, 365/366/730 jours, propriétés de non-recul).
 - **Alternatives écartées :**
   - **Retour au pied de la montagne** après une rupture : vécu comme une pénalité, contraire au positionnement et à D4.
@@ -199,7 +199,9 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 
 ### D19. Jour manqué encore rattrapable : bivouac à la même altitude
 
-- **Décision :** tant que le jour manqué peut être rattrapé, l'alpiniste garde l'altitude qu'il aurait si le rattrapage était fait, en pose « bivouac » (corde provisoire). La série affichée en texte reste la série réelle.
+- **Décision :**
+  - Tant que le jour manqué peut être rattrapé, l'alpiniste garde l'altitude qu'il aurait si le rattrapage était fait, en pose « bivouac » (corde provisoire).
+  - Seule la position est « comme si » : elle reste juste sous la prochaine étape réellement non atteinte, sur la montagne réellement affichée. Le décor, les camps, le cycle, la flamme et les textes restent réels : le bivouac ne fait jamais apparaître puis disparaître un palier.
 - **Alternative écartée :** redescendre au camp dès le lendemain d'un oubli, puis remonter d'un coup après le rattrapage.
 - **Raison :** pas de chute visuelle au moment le plus sensible ; Doc 07 prévoit un état « récupération ».
 
@@ -210,7 +212,9 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
   - Un thème peut fournir une illustration **décorative** (`HabitScene`, `aria-hidden`), affichée dans le bouton de coche, à partir de données neutres (`HabitProgress`, geste en cours, animations permises).
   - La logique de progression, neutre, vit dans `src/themes/progress.ts` et resservira aux futurs thèmes.
   - Les thèmes sont découverts automatiquement (`src/themes/<id>/theme.ts`) ; c'est le thème qui se déclare par défaut (`isDefault`).
-  - Isolation vérifiée : règles ESLint (un thème n'importe ni l'interface, ni le stockage, ni le registre ; l'interface n'importe que `src/themes/index.ts`) et test garde-fou (aucun vocabulaire montagne hors de `src/themes/mountain/`, CSS compris).
+  - Isolation vérifiée :
+    - règles ESLint : un thème n'importe ni l'interface, ni le stockage, ni le registre (sous toutes ses formes de chemin), et aucun import dynamique ; l'interface n'importe que `src/themes/index.ts` ;
+    - test garde-fou : aucun vocabulaire montagne hors de `src/themes/mountain/`, CSS et tests compris, y compris dans les identifiants composés (`MountainScene`, `SUMMIT_DAYS`). Seule exception : le test de pureté du moteur, conservé, qui contient la liste des mots interdits.
 - **Alternative écartée :** confier au thème le bouton et ses textes. Chaque thème aurait dû réimplémenter l'accessibilité, et les tests seraient devenus dépendants du thème.
 - **Raison :** accessibilité et rapidité de coche identiques quel que soit le thème ; un nouveau thème n'a que du décor à fournir.
 
@@ -231,8 +235,13 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 
 ### D23. Célébration
 
-- **Décision :** l'alpiniste célèbre, et un message positif est annoncé, seulement quand la coche du jour fait atteindre une étape **jamais atteinte jusque-là** (palier ou sommet). Repasser un palier déjà acquis ou recoller deux séries par un rattrapage ne déclenche pas de célébration.
-- **Alternative écartée :** célébrer chaque passage d'un palier, y compris après une rupture.
+- **Décision :**
+  - L'alpiniste célèbre, et un message positif est annoncé, quand la série du jour (coche faite) atteint une étape **jamais atteinte jusque-là** (palier ou sommet).
+  - Repasser un palier déjà acquis ne déclenche pas de célébration.
+  - Un palier atteint grâce à un rattrapage est célébré comme les autres, dès que la coche du jour est faite, quel que soit l'ordre des deux gestes (cocher puis rattraper, ou l'inverse).
+- **Alternatives écartées :**
+  - Célébrer chaque passage d'un palier, y compris après une rupture.
+  - Ne jamais célébrer un palier atteint grâce à un rattrapage : la célébration dépendait alors de l'ordre des gestes.
 - **Raison :** la célébration marque un vrai progrès ; le décor ne change d'ailleurs pas dans les autres cas.
 
 ### D24. Mise en page, contrastes et reports

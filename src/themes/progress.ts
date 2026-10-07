@@ -24,6 +24,8 @@ import {
   type Completion,
   type Habit,
   type LocalDate,
+  type RecoveryState,
+  type StreakSummary,
   type StreakTier,
   type StreakTierId,
   type TodayStatus,
@@ -78,6 +80,10 @@ export interface HabitProgress {
   stages: ProgressStage[]
   /** Plus haut palier jamais atteint : il fixe le décor. */
   decorTier: StreakTier | null
+  /** Plus haute étape jamais atteinte (palier, ou fin de cycle au-delà du dernier palier). */
+  highestStage: { tierId: StreakTierId | null; days: number } | null
+  /** Durée « effective » (en jours) qui place le personnage sur le parcours. */
+  altitudeDays: number
   /** Prochaine étape visée et jours de série restants pour l'atteindre. */
   next: { tierId: StreakTierId | null; days: number; daysRemaining: number }
   state: ProgressState
@@ -148,7 +154,7 @@ function cycleOf(days: number, length: number): number {
 }
 
 /** Position (0 à 1) d'une durée dans un cycle donné. */
-function positionInCycle(days: number, cycle: number, tiers: StreakTier[], length: number): number {
+function positionInCycle(days: number, cycle: number, tiers: readonly StreakTier[], length: number): number {
   if (cycle >= 2) {
     return Math.min(1, Math.max(0, (days - (cycle - 1) * length) / length))
   }
@@ -212,6 +218,9 @@ export function computeHabitProgress(input: ProgressInput, tiers: readonly Strea
     position,
     stages,
     decorTier: tierForDuration(best, sorted),
+    highestStage:
+      bestStage > 0 ? { tierId: sorted.find((tier) => tier.minDays === bestStage)?.id ?? null, days: bestStage } : null,
+    altitudeDays: effective,
     next: { tierId: nextTier?.id ?? null, days: nextDays, daysRemaining: Math.max(0, nextDays - current) },
     state,
     intensity,
@@ -221,42 +230,67 @@ export function computeHabitProgress(input: ProgressInput, tiers: readonly Strea
 
 /** Entrées de progression tirées des données du moteur, sans le modifier. */
 export interface DerivedProgress {
-  /** Progression réelle : sert aux textes (série, prochain palier). */
+  /** Progression réelle : sert aux textes (série, paliers). */
   actual: HabitProgress
   /**
-   * Progression affichée par la scène : tant qu'un jour manqué peut être rattrapé,
-   * le personnage garde l'altitude qu'il aurait si le rattrapage était fait.
+   * Progression affichée par la scène. Identique à la progression réelle (décor,
+   * étapes, cycle, état), sauf la position : tant qu'un jour manqué peut être
+   * rattrapé, le personnage garde l'altitude qu'il aurait si le rattrapage était
+   * fait, sans jamais atteindre une étape qui ne l'est pas encore.
    */
   visual: HabitProgress
+  /** Série calculée par le moteur (réutilisable par l'interface). */
+  streak: StreakSummary
+  /** Situation du rattrapage calculée par le moteur. */
+  recovery: RecoveryState
+}
+
+type ScheduleSource = Pick<Habit, 'id' | 'frequency' | 'createdOn' | 'pauses'>
+
+/**
+ * Meilleure durée des séries antérieures à la série en cours : on rejoue
+ * l'historique jusqu'à la veille du début de la série.
+ */
+function previousBestDuration(habit: ScheduleSource, own: readonly Completion[], streak: StreakSummary): number {
+  if (streak.currentStartedOn === null) return streak.bestDurationDays
+  const startedOn = streak.currentStartedOn
+  const dayBefore = previousScheduledDay(habit, startedOn)
+  if (dayBefore === null) return 0
+  return computeStreak(
+    habit,
+    own.filter((c) => c.date < startedOn),
+    dayBefore,
+  ).bestDurationDays
 }
 
 function inputsFor(
-  habit: Pick<Habit, 'id' | 'frequency' | 'createdOn' | 'pauses'>,
-  completions: readonly Completion[],
+  habit: ScheduleSource,
+  own: readonly Completion[],
+  streak: StreakSummary,
   today: LocalDate,
   lastScheduledDay: ProgressInput['lastScheduledDay'],
 ): ProgressInput {
-  const streak = computeStreak(habit, completions, today)
-  const withoutToday = completions.filter((c) => !(c.habitId === habit.id && c.date === today))
-  const beforeToday = computeStreak(habit, withoutToday, today)
-  // Meilleure durée des séries antérieures à la série en cours : on rejoue
-  // l'historique jusqu'à la veille du début de la série.
-  let previousBest = streak.bestDurationDays
-  if (streak.currentStartedOn !== null) {
-    const startedOn = streak.currentStartedOn
-    const earlier = completions.filter((c) => c.habitId === habit.id && c.date < startedOn)
-    const dayBefore = previousScheduledDay(habit, startedOn)
-    previousBest = dayBefore === null ? 0 : computeStreak(habit, earlier, dayBefore).bestDurationDays
-  }
+  // La meilleure durée « avant la coche du jour » ne diffère que si aujourd'hui est fait.
+  const bestBeforeToday =
+    streak.today === 'done'
+      ? computeStreak(
+          habit,
+          own.filter((c) => c.date !== today),
+          today,
+        ).bestDurationDays
+      : streak.bestDurationDays
   return {
     currentDurationDays: streak.currentDurationDays,
     bestDurationDays: streak.bestDurationDays,
-    previousBestDurationDays: previousBest,
-    bestDurationBeforeToday: beforeToday.bestDurationDays,
+    previousBestDurationDays: previousBestDuration(habit, own, streak),
+    bestDurationBeforeToday: bestBeforeToday,
     today: streak.today,
     lastScheduledDay,
   }
 }
+
+/** Marge qui garde le personnage juste sous une étape pas encore atteinte. */
+const BELOW_STAGE_DAYS = 0.5
 
 export function deriveHabitProgress(
   habit: Pick<Habit, 'id' | 'status' | 'frequency' | 'createdOn' | 'pauses'>,
@@ -264,23 +298,37 @@ export function deriveHabitProgress(
   today: LocalDate,
   tiers: readonly StreakTier[] = STREAK_TIERS,
 ): DerivedProgress {
-  const recovery = getRecoveryState(habit, completions, today)
+  // Seules les validations de l'habitude comptent : on les isole une fois.
+  const own = completions.filter((c) => c.habitId === habit.id)
+  const streak = computeStreak(habit, own, today)
+  const recovery = getRecoveryState(habit, own, today)
   const lastDay = previousScheduledDay(habit, today)
   let lastScheduledDay: ProgressInput['lastScheduledDay'] = 'none'
   if (recovery.status === 'available') lastScheduledDay = 'recoverable'
-  else if (lastDay !== null) {
-    lastScheduledDay = completions.some((c) => c.habitId === habit.id && c.date === lastDay) ? 'validated' : 'missed'
+  else if (lastDay !== null) lastScheduledDay = own.some((c) => c.date === lastDay) ? 'validated' : 'missed'
+
+  const actual = computeHabitProgress(inputsFor(habit, own, streak, today, lastScheduledDay), tiers)
+  if (recovery.status !== 'available') {
+    return { actual, visual: actual, streak, recovery }
   }
 
-  const actual = computeHabitProgress(inputsFor(habit, completions, today, lastScheduledDay), tiers)
-  if (recovery.status !== 'available') {
-    return { actual, visual: actual }
+  // Altitude « comme si » le jour manqué était rattrapé, plafonnée juste sous la
+  // prochaine étape réelle et projetée sur le cycle réellement affiché.
+  const hypothetical = [...own, { habitId: habit.id, date: recovery.missedDate, kind: 'recovery' as const }]
+  const hypotheticalStreak = computeStreak(habit, hypothetical, today)
+  const hypotheticalDays = effectiveDays(
+    hypotheticalStreak.currentDurationDays,
+    previousBestDuration(habit, hypothetical, hypotheticalStreak),
+    tiers,
+  )
+  const sorted = sortedTiers(tiers)
+  const length = cycleLength(sorted)
+  const ceiling = Math.min(actual.next.days, actual.cycle * length) - BELOW_STAGE_DAYS
+  const days = Math.max(actual.altitudeDays, Math.min(hypotheticalDays, ceiling))
+  const visual: HabitProgress = {
+    ...actual,
+    altitudeDays: days,
+    position: Math.max(actual.position, positionInCycle(days, actual.cycle, sorted, length)),
   }
-  const hypothetical: Completion[] = [
-    ...completions,
-    { habitId: habit.id, date: recovery.missedDate, kind: 'recovery' },
-  ]
-  const visual = computeHabitProgress(inputsFor(habit, hypothetical, today, lastScheduledDay), tiers)
-  // Seules la position et le décor sont « comme si » : l'état et la célébration restent réels.
-  return { actual, visual: { ...visual, state: actual.state, celebrated: actual.celebrated } }
+  return { actual, visual, streak, recovery }
 }

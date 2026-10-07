@@ -189,9 +189,12 @@ describe('computeHabitProgress : états et célébration', () => {
     expect(progress).toMatchObject({ state: 'done', celebrated: null })
   })
 
-  it('célèbre la fin d’un cycle au-delà du dernier palier', () => {
+  it('célèbre la fin d’un cycle au-delà du dernier palier, et la retient comme plus haute étape', () => {
     const progress = computeHabitProgress(input({ currentDurationDays: 730, bestDurationBeforeToday: 729, today: 'done' }))
     expect(progress.celebrated).toEqual({ tierId: null, days: 730 })
+    expect(progress.highestStage).toEqual({ tierId: null, days: 730 })
+    expect(computeHabitProgress(input({ currentDurationDays: 40 })).highestStage).toEqual({ tierId: 'days21', days: 21 })
+    expect(computeHabitProgress(input({ currentDurationDays: 3 })).highestStage).toBeNull()
   })
 
   it('ordonne les états : fait > rattrapable > manqué > repos', () => {
@@ -233,7 +236,36 @@ describe('deriveHabitProgress (données du moteur)', () => {
     expect(visual.state).toBe('recoverable')
     expect(actual.position).toBe(0.25)
     expect(visual.position).toBeGreaterThan(actual.position)
-    expect(visual.intensity).toBe(2)
+    // Seule la position change : décor, étapes, cycle et flamme restent réels.
+    expect(visual).toMatchObject({
+      decorTier: actual.decorTier,
+      stages: actual.stages,
+      cycle: actual.cycle,
+      intensity: actual.intensity,
+      next: actual.next,
+    })
+  })
+
+  it('pendant la fenêtre de rattrapage, n’affiche jamais une étape pas encore atteinte', () => {
+    const fresh = { ...habit, createdOn: '2026-09-13' }
+    // 20 jours validés, 3 octobre manqué : le palier de 21 jours n'est pas atteint.
+    const { actual, visual } = deriveHabitProgress(fresh, daily('2026-09-13', '2026-10-02'), TODAY)
+    expect(actual.decorTier).toBeNull()
+    expect(visual.decorTier).toBeNull()
+    expect(visual.stages[0]?.reached).toBe(false)
+    expect(visual.position).toBeLessThan(0.25)
+    expect(visual.position).toBeGreaterThan(0.2)
+  })
+
+  it('pendant la fenêtre de rattrapage, ne passe pas au cycle suivant', () => {
+    const old = { ...habit, createdOn: '2025-10-04' }
+    // 364 jours validés, 3 octobre manqué, aujourd'hui coché.
+    const completions = [...daily('2025-10-04', '2026-10-02'), ...daily(TODAY, TODAY)]
+    const { actual, visual } = deriveHabitProgress(old, completions, TODAY)
+    expect(visual.cycle).toBe(actual.cycle)
+    expect(visual.cycle).toBe(1)
+    expect(visual.decorTier?.id).toBe('months6')
+    expect(visual.position).toBeLessThan(1)
   })
 
   it('jour manqué non rattrapable : état manqué', () => {

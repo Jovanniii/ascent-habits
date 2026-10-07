@@ -83,11 +83,16 @@ export default defineConfig([
               message: "Un thème ne dépend ni de l'interface ni du stockage.",
             },
             {
-              regex: '^(\\.\\./)+(index|registry)(\\.ts)?$',
+              // '..', '../', '../index.ts', '../../registry.ts', '/src/themes/index.ts'…
+              regex: '^(\\.\\.?/?|(\\.\\./)+|(\\.\\./)+(index|registry)(\\.ts)?|.*themes/(index|registry)(\\.ts)?)$',
               message: "Un thème n'importe que ../types.ts, ../progress.ts et le moteur.",
             },
           ],
         },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'ImportExpression', message: 'Pas d’import dynamique dans un thème (registre et cycles).' },
       ],
     },
   },
