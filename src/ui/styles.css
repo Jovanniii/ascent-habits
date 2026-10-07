@@ -40,6 +40,17 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* Le réglage de l'appareil s'applique aussi, à tout moment. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 h1,
 h2,
 h3,
@@ -492,6 +503,148 @@ main.screen {
   font-weight: 600;
 }
 
+/* Habitude illustrée par le thème : le panorama est le bouton de coche. */
+
+.habit--scene {
+  gap: 0;
+  padding: 0;
+}
+
+.habit-scene {
+  position: relative;
+}
+
+.habit-scene__toggle {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 76px;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  overflow: hidden;
+  background: var(--color-surface-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.habit-scene__toggle:focus-visible {
+  outline-offset: -3px;
+}
+
+.habit-scene__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: transparent;
+}
+
+.habit-scene__badge .check__icon {
+  width: 20px;
+  height: 20px;
+}
+
+.habit-scene__toggle[aria-pressed='true'] .habit-scene__badge {
+  border-color: var(--color-done);
+  background: var(--color-done);
+  color: var(--color-on-done);
+}
+
+/* « À faire » : la coche est masquée (et pas seulement transparente, que les couleurs forcées rendraient visible). */
+.check[aria-pressed='false'] .check__icon,
+.habit-scene__toggle[aria-pressed='false'] .check__icon {
+  visibility: hidden;
+}
+
+.habit-scene__menu {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+
+.habit-scene__menu svg {
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  opacity: 0.85;
+}
+
+.habit__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding: 6px 12px 0;
+}
+
+/* Nom sur deux lignes au plus : deux noms proches restent distincts. */
+.habit--scene .habit__name {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.streak--compact {
+  flex-shrink: 0;
+  padding: 1px 10px;
+  font-size: 0.875rem;
+}
+
+.habit__tiers {
+  /* Bloc conteneur du texte caché : il reste rogné et ne déborde pas de la page. */
+  position: relative;
+  overflow: hidden;
+  padding: 0 12px 8px;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.habit--scene > .button--small,
+.habit--scene > .habit__recovery {
+  margin: 0 12px 12px;
+}
+
+@media (forced-colors: active) {
+  /* L'illustration garde ses couleurs (sinon la surbrillance du toucher masque tout le panorama). */
+  .habit-scene__toggle {
+    border: 1px solid CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .habit-scene__badge {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .check[aria-pressed='true'],
+  .habit-scene__toggle[aria-pressed='true'] .habit-scene__badge {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
 /* Tâches et jalons */
 
 .task,
@@ -637,12 +790,37 @@ main.screen {
 }
 
 .notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   max-width: 36rem;
-  padding: 10px 16px;
+  padding: 10px 8px 10px 16px;
   border-radius: var(--radius);
   background: var(--color-primary);
   color: var(--color-on-primary);
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+}
+
+/* Seul un message avec action capte les touchers ; les autres laissent passer. */
+.notice--action {
+  pointer-events: auto;
+}
+
+.notice__action {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.notice__action:focus-visible {
+  outline-color: var(--color-on-primary);
 }
 
 /* Fenêtres modales */

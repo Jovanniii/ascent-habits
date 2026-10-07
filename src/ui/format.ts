@@ -3,6 +3,8 @@
  */
 import { addDays, isoWeekday, type Frequency, type IsoWeekday, type LocalDate, type StreakTierId } from '../engine/index.ts'
 
+const DAYS_PER_YEAR = 365
+
 export const WEEKDAY_NAMES: Record<IsoWeekday, string> = {
   1: 'lundi',
   2: 'mardi',
@@ -30,6 +32,13 @@ export const TIER_LABELS: Record<StreakTierId, string> = {
   months2: '2 mois',
   months6: '6 mois',
   year1: '1 an',
+}
+
+/** Étape d'un parcours : un palier, ou au-delà du dernier palier un nombre d'années. */
+export function formatStage(stage: { tierId: StreakTierId | null; days: number }): string {
+  if (stage.tierId) return TIER_LABELS[stage.tierId]
+  const years = Math.round(stage.days / DAYS_PER_YEAR)
+  return years > 1 ? `${years} ans` : `${stage.days} jours`
 }
 
 export function capitalize(text: string): string {

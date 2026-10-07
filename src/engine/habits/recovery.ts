@@ -4,8 +4,10 @@
  * Le jour rattrapable est le dernier jour prévu avant aujourd'hui. Il peut être
  * validé après coup (type « rattrapage ») jusqu'au jour prévu suivant inclus :
  * pour une habitude quotidienne, c'est exactement le lendemain. La série est
- * alors préservée. Le nombre de récupérations est limité par habitude et par
- * semaine (celle du jour rattrapé).
+ * alors préservée. La récupération n'est proposée que s'il existe une série à
+ * sauver, c'est-à-dire si le jour prévu précédant le jour manqué est validé.
+ * Le nombre de récupérations est limité par habitude et par semaine (celle du
+ * jour rattrapé).
  */
 import { RECOVERY_LIMIT_PER_WEEK } from '../config.ts'
 import { addDays, isWithin, startOfIsoWeek, type LocalDate } from '../dates.ts'
@@ -19,7 +21,10 @@ export type RecoveryState =
   | { status: 'recovered'; missedDate: LocalDate }
   /** Un jour est manqué mais la limite hebdomadaire est atteinte. */
   | { status: 'limitReached'; missedDate: LocalDate }
-  /** Rien à rattraper : dernier jour prévu validé, aucun jour prévu, ou habitude inactive. */
+  /**
+   * Rien à proposer : dernier jour prévu validé, aucune série à sauver (jour
+   * précédent non validé ou inexistant), aucun jour prévu, ou habitude inactive.
+   */
   | { status: 'none' }
 
 export function recoveriesUsedInWeek(
@@ -53,6 +58,12 @@ export function getRecoveryState(
   const completion = completions.find((c) => c.habitId === habit.id && c.date === missedDate)
   if (completion) {
     return completion.kind === 'recovery' ? { status: 'recovered', missedDate } : { status: 'none' }
+  }
+  // Rattraper n'a de sens que s'il y a une série à sauver : le jour prévu qui
+  // précède le jour manqué doit être validé (normalement ou par rattrapage).
+  const dayBefore = previousScheduledDay(habit, missedDate)
+  if (dayBefore === null || !completions.some((c) => c.habitId === habit.id && c.date === dayBefore)) {
+    return { status: 'none' }
   }
   if (recoveriesUsedInWeek(habit.id, completions, missedDate) >= limitPerWeek) {
     return { status: 'limitReached', missedDate }

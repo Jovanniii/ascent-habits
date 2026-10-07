@@ -5,7 +5,7 @@ La gamification est un décor agréable, sans pression ni message culpabilisant.
 
 Projet de portfolio product manager. Voir [docs/](docs/) pour la vision, le backlog, la direction artistique et le [journal de décisions](docs/journal-decisions.md).
 
-> Itération 1 : fondations techniques et logique métier, avec une interface sobre et provisoire (sans direction artistique).
+> Itération 2 : thème montagne avec des visuels provisoires (formes SVG simples), en plus du thème « Sobre ».
 
 ## Fonctionnalités actuelles
 
@@ -22,6 +22,9 @@ Projet de portfolio product manager. Voir [docs/](docs/) pour la vision, le back
   - activation ou désactivation des animations ;
   - choix du thème ;
   - export et import JSON, avec export de sécurité avant tout remplacement.
+- **Thèmes** :
+  - « Montagne » (par défaut pour les nouvelles installations) : chaque habitude du jour s'affiche dans un petit panorama où un alpiniste progresse vers le prochain palier ; un toucher sur le panorama coche l'habitude ;
+  - « Sobre » : interface sans illustration.
 - **PWA** : installable sur l'écran d'accueil, fonctionne hors ligne.
 
 Les données restent sur l'appareil : aucun compte, aucun serveur, aucune donnée envoyée.
@@ -52,7 +55,8 @@ npm run dev        # http://localhost:5173/ascent-habits/
 src/
   engine/     Moteur : modèle, règles métier et commandes, en TypeScript pur
   storage/    Stockage abstrait (AppRepository), localStorage, validation, export/import
-  themes/     Thèmes interchangeables (jetons de couleur) ; thème « Sobre » provisoire
+  themes/     Thèmes interchangeables : contrat, registre, progression neutre (progress.ts),
+              « mountain » (scène SVG) et « plain » (sobre)
   ui/         Interface React (écrans, composants, état)
 ```
 
@@ -63,6 +67,10 @@ src/
   - Les séries, la récupération, les paliers et la progression des objectifs sont des fonctions pures testées.
   - Chaque action de l'interface est une commande pure `(données, entrée, contexte) => données`. L'heure et la génération d'identifiants sont injectées par le contexte.
 - **Réglages métier :** la limite de récupération et les paliers sont des constantes de `src/engine/config.ts`.
+- **Thèmes :**
+  - Un thème est un dossier `src/themes/<id>/` qui exporte `theme` depuis `theme.ts` : jetons de couleur et, s'il le souhaite, une illustration décorative des habitudes.
+  - L'interface garde le bouton de coche et tous les textes ; le thème ne fournit que du décor.
+  - Aucune référence à la montagne en dehors de `src/themes/mountain/` (vérifié par un test), et dépendances entre modules contrôlées par ESLint.
 - **Stockage :** l'interface `AppRepository` est asynchrone. Un backend ou IndexedDB pourra remplacer le localStorage en v2 sans toucher au reste.
 
 ## Déploiement sur GitHub Pages

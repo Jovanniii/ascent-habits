@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { makeAppData, makeContext } from '../testing/factories.ts'
 import { CommandError } from './context.ts'
-import { addTask, deleteTask, toggleTask, updateTask } from './tasks.ts'
+import { addTask, deleteTask, restoreTask, toggleTask, updateTask } from './tasks.ts'
 
 const goal = { id: 'goal-1', name: 'Déménager', status: 'active' as const, createdAt: '' }
 
@@ -59,5 +59,35 @@ describe('updateTask et deleteTask', () => {
     const created = addTask(makeAppData(), { name: 'Courses' }, makeContext())
     expect(deleteTask(created, 'id-1').tasks).toEqual([])
     expect(() => deleteTask(created, 'inconnue')).toThrow(CommandError)
+  })
+})
+
+describe('restoreTask', () => {
+  function threeTasks() {
+    const ctx = makeContext()
+    let data = addTask(makeAppData({ goals: [goal] }), { name: 'Une' }, ctx)
+    data = addTask(data, { name: 'Deux', goalId: 'goal-1' }, ctx)
+    return addTask(data, { name: 'Trois' }, ctx)
+  }
+
+  it('remet la tâche supprimée à sa place', () => {
+    const data = threeTasks()
+    const removed = data.tasks[1]!
+    const restored = restoreTask(deleteTask(data, removed.id), removed, 1)
+    expect(restored).toEqual(data)
+  })
+
+  it('borne la position et retire un lien vers un objectif disparu', () => {
+    const data = threeTasks()
+    const removed = data.tasks[1]!
+    const withoutGoal = { ...deleteTask(data, removed.id), goals: [] }
+    const restored = restoreTask(withoutGoal, removed, 99)
+    expect(restored.tasks.map((task) => task.name)).toEqual(['Une', 'Trois', 'Deux'])
+    expect(restored.tasks[2]).not.toHaveProperty('goalId')
+  })
+
+  it('refuse de dupliquer une tâche existante', () => {
+    const data = threeTasks()
+    expect(() => restoreTask(data, data.tasks[0]!, 0)).toThrow(CommandError)
   })
 })

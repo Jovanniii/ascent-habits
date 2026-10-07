@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createEmptyAppData, toLocalDate, type AppData } from '../engine/index.ts'
 import { StoredDataError, type AppRepository } from '../storage/index.ts'
 import { DEFAULT_THEME_ID, applyTheme, getTheme } from '../themes/index.ts'
@@ -91,7 +91,8 @@ function Shell({ storageAvailable }: { storageAvailable: boolean }) {
   const mainRef = useRef<HTMLElement>(null)
   const tabChanged = useRef(false)
 
-  useEffect(() => {
+  // Avant l'affichage : pas de premier rendu sans couleurs ni préférence d'animation.
+  useLayoutEffect(() => {
     applyTheme(getTheme(data.settings.themeId), data.settings.animationsEnabled)
   }, [data.settings.themeId, data.settings.animationsEnabled])
 

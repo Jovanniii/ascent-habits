@@ -26,7 +26,7 @@ export function TasksScreen() {
       </header>
       <TaskForm goals={data.goals.filter((goal) => goal.status === 'active')} />
       <section className="section" aria-labelledby="tasks-todo">
-        <h2 id="tasks-todo" className="section__title">À faire</h2>
+        <h2 id="tasks-todo" className="section__title" tabIndex={-1}>À faire</h2>
         {todo.length === 0 ? (
           <p className="section__empty">Aucune tâche pour l’instant.</p>
         ) : (
@@ -42,7 +42,7 @@ export function TasksScreen() {
           <summary>Terminées ({done.length})</summary>
           <ul className="list">
             {done.map((task) => (
-              <TaskItem key={task.id} task={task} goalName={task.goalId && goalNames.get(task.goalId)} deletable />
+              <TaskItem key={task.id} task={task} goalName={task.goalId && goalNames.get(task.goalId)} />
             ))}
           </ul>
         </details>

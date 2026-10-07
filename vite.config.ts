@@ -42,9 +42,11 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
     restoreMocks: true,
+    // Les tests lisent le CSS brut (?raw) : garde-fou d'isolation, palette, animations.
+    css: { include: [/\.css(\?.*)?$/] },
     coverage: {
-      // La couverture vise la logique métier et le stockage, testés unitairement.
-      include: ['src/engine/**', 'src/storage/**'],
+      // La couverture vise la logique métier, le stockage et la logique des thèmes.
+      include: ['src/engine/**', 'src/storage/**', 'src/themes/**/*.ts'],
       exclude: ['**/*.test.ts', '**/testing/**', '**/index.ts'],
       thresholds: { lines: 95, branches: 85 },
     },

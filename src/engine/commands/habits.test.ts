@@ -162,6 +162,11 @@ describe('recoverMissedDay et cancelRecovery', () => {
     expectCommandError(() => recoverMissedDay(data, 'habit-1', makeContext()), 'recovery-unavailable')
   })
 
+  it('refuse un rattrapage quand il n’y a aucune série à sauver', () => {
+    const data = withHabit({ completions: completionsBetween('2026-09-25', '2026-10-01') }) // 2 et 3 manqués
+    expectCommandError(() => recoverMissedDay(data, 'habit-1', makeContext()), 'recovery-unavailable')
+  })
+
   it('refuse un rattrapage quand rien ne manque', () => {
     const data = withHabit({ completions: completionsBetween('2026-09-25', '2026-10-03') })
     expectCommandError(() => recoverMissedDay(data, 'habit-1', makeContext()), 'recovery-unavailable')

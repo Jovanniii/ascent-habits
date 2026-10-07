@@ -44,7 +44,12 @@ export function TodayScreen() {
         </div>
       ) : (
         <>
-          <HabitList title="À cocher aujourd’hui" habits={dueToday} emptyText="Rien de prévu aujourd’hui." />
+          <HabitList
+            title="À cocher aujourd’hui"
+            habits={dueToday}
+            variant="today"
+            emptyText="Rien de prévu aujourd’hui."
+          />
           {notDueToday.length > 0 && <HabitList title="Pas prévues aujourd’hui" habits={notDueToday} />}
           {paused.length > 0 && <HabitList title="En pause" habits={paused} />}
           <button type="button" className="button button--primary button--block" onClick={() => setCreating(true)}>
@@ -65,7 +70,7 @@ export function TodayScreen() {
 
       {tasksForToday.length > 0 && (
         <section className="section" aria-labelledby="today-tasks">
-          <h2 id="today-tasks" className="section__title">Tâches pour aujourd’hui</h2>
+          <h2 id="today-tasks" className="section__title" tabIndex={-1}>Tâches pour aujourd’hui</h2>
           <ul className="list">
             {tasksForToday.map((task) => (
               <TaskItem key={task.id} task={task} goalName={task.goalId && goalNames.get(task.goalId)} />
@@ -87,7 +92,14 @@ export function TodayScreen() {
   )
 }
 
-function HabitList({ title, habits, emptyText }: { title: string; habits: Habit[]; emptyText?: string }) {
+interface HabitListProps {
+  title: string
+  habits: Habit[]
+  variant?: 'today' | 'compact'
+  emptyText?: string
+}
+
+function HabitList({ title, habits, variant = 'compact', emptyText }: HabitListProps) {
   const headingId = useId()
   return (
     <section className="section" aria-labelledby={headingId}>
@@ -96,8 +108,8 @@ function HabitList({ title, habits, emptyText }: { title: string; habits: Habit[
         <p className="section__empty">{emptyText}</p>
       ) : (
         <ul className="list">
-          {habits.map((habit) => (
-            <HabitCard key={habit.id} habit={habit} />
+          {habits.map((habit, index) => (
+            <HabitCard key={habit.id} habit={habit} variant={variant} index={index} />
           ))}
         </ul>
       )}

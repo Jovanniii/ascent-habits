@@ -3,7 +3,7 @@
  */
 import type { LocalDate } from '../dates.ts'
 import type { AppData, Task } from '../model.ts'
-import type { CommandContext } from './context.ts'
+import { CommandError, type CommandContext } from './context.ts'
 import { findOrThrow, normalizeName, normalizeOptionalDate, replaceById } from './validation.ts'
 
 export interface NewTaskInput {
@@ -69,4 +69,22 @@ export function toggleTask(data: AppData, taskId: string, ctx: CommandContext): 
 export function deleteTask(data: AppData, taskId: string): AppData {
   findOrThrow(data.tasks, taskId, 'Tâche')
   return { ...data, tasks: data.tasks.filter((task) => task.id !== taskId) }
+}
+
+/**
+ * Remet une tâche supprimée à sa place (annulation d'une suppression). Le lien
+ * avec un objectif supprimé entre-temps est retiré pour garder des données cohérentes.
+ */
+export function restoreTask(data: AppData, task: Task, index: number): AppData {
+  if (data.tasks.some((existing) => existing.id === task.id)) {
+    throw new CommandError('invalid-state', 'La tâche existe déjà.')
+  }
+  const restored: Task = { ...task }
+  if (restored.goalId !== undefined && !data.goals.some((goal) => goal.id === restored.goalId)) {
+    delete restored.goalId
+  }
+  const position = Math.min(Math.max(0, Math.trunc(index)), data.tasks.length)
+  const tasks = [...data.tasks]
+  tasks.splice(position, 0, restored)
+  return { ...data, tasks }
 }

@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import './testing/setup.ts'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createEmptyAppData, type AppData, type Completion } from '../engine/index.ts'
 import { StoredDataError, createBackup, createMemoryRepository, serializeBackup } from '../storage/index.ts'
+import { THEMES } from '../themes/index.ts'
 import { App } from './App.tsx'
 import { downloadTextFile } from './download.ts'
 
@@ -56,7 +57,7 @@ describe('habitudes', () => {
     await user.click(screen.getByRole('button', { name: 'Créer l’habitude' }))
 
     const card = screen.getByRole('heading', { name: 'Lire 10 pages' }).closest('li')!
-    expect(within(card).getByText('Série actuelle')).toBeInTheDocument()
+    expect(within(card).getByText(/Série actuelle/)).toBeInTheDocument()
     expect(within(card).getByText('0 validation')).toBeInTheDocument()
 
     const check = within(card).getByRole('button', { name: 'Valider « Lire 10 pages » pour aujourd\'hui' })
@@ -87,6 +88,29 @@ describe('habitudes', () => {
     expect(screen.getByRole('button', { name: 'Rattraper samedi pour « Lire »' })).toBeInTheDocument()
   })
 
+  it('célèbre un palier atteint grâce à un rattrapage, même après la coche du jour', async () => {
+    const habit = { ...readingHabit, createdOn: '2026-09-14' }
+    // 19 jours validés jusqu'au 2 octobre, samedi 3 manqué : cocher aujourd'hui puis rattraper.
+    const { user } = await renderApp(dataWith({ habits: [habit], completions: daily('2026-09-14', '2026-10-02') }))
+    await user.click(screen.getByRole('button', { name: "Valider « Lire » pour aujourd'hui" }))
+    await user.click(screen.getByRole('button', { name: 'Rattraper samedi pour « Lire »' }))
+    expect(screen.getByText('Samedi rattrapé. Nouveau palier atteint pour « Lire » : 21 jours. Bravo !')).toBeInTheDocument()
+    expect(screen.getByText('21 validations')).toBeInTheDocument()
+  })
+
+  it('ne propose pas de rattrapage quand il n’y a aucune série à sauver', async () => {
+    // Rattrapage déjà utilisé le 29 septembre, puis 2 et 3 octobre manqués : rattraper
+    // le 3 ne sauverait aucune série, et la limite de la semaine n'est pas affichée.
+    const completions = [
+      ...daily('2026-09-20', '2026-10-01').filter((c) => c.date !== '2026-09-29'),
+      { habitId: 'h1', date: '2026-09-29', kind: 'recovery' as const },
+    ]
+    await renderApp(dataWith({ habits: [readingHabit], completions }))
+    expect(screen.getByText('0 validation')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Rattraper/ })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Rattrapage de la semaine/)).not.toBeInTheDocument()
+  })
+
   it('affiche le plus haut palier séparément de la série actuelle', async () => {
     await renderApp(
       dataWith({
@@ -96,7 +120,8 @@ describe('habitudes', () => {
     )
     expect(screen.getByText('3 validations')).toBeInTheDocument()
     expect(screen.getByText('Plus haut palier atteint : 21 jours')).toBeInTheDocument()
-    expect(screen.getByText('Prochain palier : 21 jours, encore 18 jours')).toBeInTheDocument()
+    // Le palier de 21 jours est déjà acquis : le prochain palier visé est 2 mois (D18).
+    expect(screen.getByText('Prochain palier : 2 mois, encore 57 jours')).toBeInTheDocument()
   })
 
   it('demande confirmation avant un changement de fréquence', async () => {
@@ -150,6 +175,96 @@ describe('tâches', () => {
   })
 })
 
+describe('tâches : coche et suppression', () => {
+  const tasks = ['Une', 'Deux', 'Trois'].map((name, index) => ({
+    id: `t${index}`,
+    name,
+    status: 'todo' as const,
+    createdAt: `2026-10-0${index + 1}T08:00:00.000Z`,
+  }))
+
+  it('coche sans message visible, annonce aux lecteurs d’écran et garde le focus dans la liste', async () => {
+    const { user } = await renderApp(dataWith({ tasks }))
+    await user.click(screen.getByRole('button', { name: 'Tâches' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Deux' }))
+
+    const status = screen.getByRole('status')
+    expect(await within(status).findByText('« Deux » terminée.')).toHaveClass('visually-hidden')
+    await vi.waitFor(() => expect(screen.getByRole('checkbox', { name: 'Trois' })).toHaveFocus())
+  })
+
+  it('supprime une tâche à faire et permet d’annuler', async () => {
+    const { repository, user } = await renderApp(dataWith({ tasks }))
+    await user.click(screen.getByRole('button', { name: 'Tâches' }))
+    await user.click(screen.getByRole('button', { name: 'Supprimer « Deux »' }))
+
+    expect(screen.queryByRole('checkbox', { name: 'Deux' })).not.toBeInTheDocument()
+    expect(screen.getByText('Tâche supprimée.')).toBeInTheDocument()
+    // Suppression au toucher : le focus passe à l'élément voisin.
+    await vi.waitFor(() => expect(screen.getByRole('checkbox', { name: 'Trois' })).toHaveFocus())
+
+    // Cocher une autre tâche ne fait pas disparaître l'annulation.
+    await user.click(screen.getByRole('checkbox', { name: 'Une' }))
+    const undo = screen.getByRole('button', { name: 'Annuler la suppression de « Deux »' })
+
+    await user.click(undo)
+    expect(screen.getByRole('checkbox', { name: 'Deux' })).toBeInTheDocument()
+    await vi.waitFor(() => expect(screen.getByRole('checkbox', { name: 'Deux' })).toHaveFocus())
+    await vi.waitFor(() => expect(repository.snapshot()?.tasks.map((task) => task.name)).toEqual(['Une', 'Deux', 'Trois']))
+    expect(repository.snapshot()?.tasks.find((task) => task.name === 'Une')?.status).toBe('done')
+  })
+})
+
+describe('tâches : annulation au clavier et délai', () => {
+  const tasks = ['Une', 'Deux'].map((name, index) => ({
+    id: `t${index}`,
+    name,
+    status: 'todo' as const,
+    createdAt: `2026-10-0${index + 1}T08:00:00.000Z`,
+  }))
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('au clavier, le focus va à « Annuler » et le message reste tant qu’il a le focus', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const repository = createMemoryRepository(dataWith({ tasks }))
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    render(<App repository={repository} now={now} />)
+    await user.click(await screen.findByRole('button', { name: 'Tâches' }))
+
+    screen.getByRole('button', { name: 'Supprimer « Une »' }).focus()
+    await user.keyboard('{Enter}')
+    const undo = screen.getByRole('button', { name: 'Annuler la suppression de « Une »' })
+    expect(undo).toHaveFocus()
+
+    act(() => {
+      vi.advanceTimersByTime(20_000)
+    })
+    expect(screen.getByRole('button', { name: /Annuler la suppression/ })).toBeInTheDocument()
+  })
+
+  it('au toucher, le message avec « Annuler » disparaît après 8 secondes sans perdre le focus', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const repository = createMemoryRepository(dataWith({ tasks }))
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    render(<App repository={repository} now={now} />)
+    await user.click(await screen.findByRole('button', { name: 'Tâches' }))
+
+    await user.click(screen.getByRole('button', { name: 'Supprimer « Une »' }))
+    act(() => {
+      vi.advanceTimersByTime(7_000)
+    })
+    expect(screen.getByText('Tâche supprimée.')).toBeInTheDocument()
+    act(() => {
+      vi.advanceTimersByTime(1_500)
+    })
+    expect(screen.queryByText('Tâche supprimée.')).not.toBeInTheDocument()
+    expect(document.activeElement).not.toBe(document.body)
+  })
+})
+
 describe('objectifs', () => {
   it('crée un objectif avec des jalons et suit sa progression', async () => {
     const { user } = await renderApp()
@@ -180,6 +295,26 @@ describe('objectifs', () => {
 })
 
 describe('réglages', () => {
+  it('change de thème sans changer le geste de coche ni les textes', async () => {
+    const { user } = await renderApp(dataWith({ habits: [readingHabit], completions: daily('2026-09-20', '2026-10-03') }))
+    for (const theme of THEMES) {
+      await user.click(screen.getByRole('button', { name: 'Réglages' }))
+      await user.selectOptions(screen.getByLabelText('Thème'), theme.name)
+      expect(document.documentElement.dataset.theme).toBe(theme.id)
+      await user.click(screen.getByRole('button', { name: 'Aujourd’hui' }))
+
+      const check = screen.getByRole('button', { name: "Valider « Lire » pour aujourd'hui" })
+      expect(screen.getByText('14 validations')).toBeInTheDocument()
+      // Le thème illustré dessine dans le bouton, sans élément interactif imbriqué.
+      expect(check.querySelector('button, a, input')).toBeNull()
+      await user.click(check)
+      expect(check).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByText('15 validations')).toBeInTheDocument()
+      await user.click(check)
+      expect(check).toHaveAttribute('aria-pressed', 'false')
+    }
+  })
+
   it('désactive les animations', async () => {
     const { user } = await renderApp()
     expect(document.documentElement.dataset.motion).toBe('full')

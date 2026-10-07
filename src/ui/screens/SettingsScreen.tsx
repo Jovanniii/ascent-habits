@@ -14,6 +14,7 @@ import { Dialog } from '../components/Dialog.tsx'
 import { downloadTextFile } from '../download.ts'
 import { formatFullDate, plural } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
+import { useMotionAllowed } from '../state/useMotionAllowed.ts'
 
 type ImportState =
   | { kind: 'idle' }
@@ -35,6 +36,7 @@ export function SettingsScreen() {
   const fileInput = useRef<HTMLInputElement>(null)
   const animationsId = useId()
   const themeId = useId()
+  const { systemReduced } = useMotionAllowed(data.settings.animationsEnabled)
 
   const exportData = (fileName = backupFileName(today)) => {
     downloadTextFile(fileName, serializeBackup(createBackup(data, now().toISOString())))
@@ -75,7 +77,11 @@ export function SettingsScreen() {
         <div className="setting">
           <label htmlFor={animationsId} className="setting__label">
             Animations
-            <span className="setting__hint">À désactiver pour une interface plus sobre et sans mouvement.</span>
+            <span className="setting__hint">
+              {systemReduced
+                ? 'Le réglage de l’appareil réduit déjà les animations.'
+                : 'À désactiver pour une interface plus sobre et sans mouvement.'}
+            </span>
           </label>
           <input
             id={animationsId}

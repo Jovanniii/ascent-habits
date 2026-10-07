@@ -1,10 +1,9 @@
 import type { Theme } from '../types.ts'
 
 /**
- * Thème sobre provisoire, sans direction artistique. Il sert à valider le
- * mécanisme de thème en attendant le thème illustré. Contrastes conformes WCAG AA.
+ * Thème sobre, sans illustration. Contrastes conformes WCAG AA.
  */
-export const plainTheme: Theme = {
+export const theme: Theme = {
   id: 'plain',
   name: 'Sobre',
   tokens: {
