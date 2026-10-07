@@ -11,6 +11,7 @@
  * progress.ts et le moteur, jamais le registre ni src/themes/index.ts.
  */
 import type { ComponentType } from 'react'
+import type { ChainMark, HabitDayState } from '../engine/index.ts'
 import type { HabitProgress } from './progress.ts'
 
 /** Variables CSS appliquées à la racine du document (ex. « --color-bg »). */
@@ -34,16 +35,36 @@ export interface HabitSceneProps {
   index: number
 }
 
+/** Données neutres transmises au décor d'un jour du calendrier (vue par habitude). */
+export interface CalendarDayMarkProps {
+  state: HabitDayState
+  /** Position du jour dans une chaîne de série, ou null. */
+  chain: ChainMark | null
+  /** Jour non validé à l'intérieur d'une chaîne (non prévu ou en pause). */
+  bridge: boolean
+}
+
 export interface Theme {
   id: string
   /** Nom affiché dans les réglages. */
   name: string
   /** Thème proposé aux nouvelles installations (un seul thème par défaut). */
   isDefault?: boolean
+  /**
+   * Jetons de couleur, communs à tous les thèmes. Le calendrier utilise en plus
+   * `--calendar-heat-0` à `--calendar-heat-4` (carte de chaleur) avec leurs couleurs
+   * de texte `--calendar-on-heat-*`, `--calendar-mark` (symboles) et
+   * `--calendar-chain` (bande des séries).
+   */
   tokens: {
     light: ThemeTokens
     dark: ThemeTokens
   }
   /** Illustration décorative d'une habitude du jour, affichée dans le bouton de coche. */
   HabitScene?: ComponentType<HabitSceneProps>
+  /**
+   * Décor d'un jour du calendrier (symbole et chaîne de série), décoratif. Sans lui,
+   * l'interface dessine des symboles simples avec les jetons du thème.
+   */
+  CalendarDayMark?: ComponentType<CalendarDayMarkProps>
 }

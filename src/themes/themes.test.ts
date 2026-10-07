@@ -53,6 +53,23 @@ describe('contrastes des jetons d’interface (WCAG AA)', () => {
   })
 })
 
+describe('contrastes des jetons du calendrier (WCAG AA)', () => {
+  const cases = THEMES.flatMap((theme) => (['light', 'dark'] as const).map((mode) => [theme.name, mode, theme] as const))
+
+  it.each(cases)('%s, mode %s', (_name, mode, theme) => {
+    const t = theme.tokens[mode]
+    for (const level of [0, 1, 2, 3, 4]) {
+      // Chiffre du jour et fraction posés sur chaque niveau de la carte de chaleur.
+      expect(contrast(t[`--calendar-on-heat-${level}`]!, t[`--calendar-heat-${level}`]!), `niveau ${level}`).toBeGreaterThanOrEqual(4.5)
+    }
+    // Symboles des jours (éléments graphiques porteurs de sens) et chiffre du jour sur la bande de série.
+    expect(contrast(t['--calendar-mark']!, t['--color-surface']!)).toBeGreaterThanOrEqual(3)
+    expect(contrast(t['--calendar-mark']!, t['--calendar-chain']!)).toBeGreaterThanOrEqual(3)
+    expect(contrast(t['--color-text']!, t['--calendar-chain']!)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(t['--color-text-muted']!, t['--calendar-chain']!)).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
 describe('applyTheme', () => {
   it('injecte les jetons, les préférences et la couleur de barre d’état', () => {
     const meta = document.createElement('meta')
