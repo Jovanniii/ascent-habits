@@ -460,3 +460,95 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 ### P5-D9. Contrastes dans les quatre ambiances
 
 - **Décision :** pour chaque palette (matin, jour, soir, nuit), testé : accent sur halo ≥ 3:1, tentes et sentier sur la montagne proche ≥ 3:1, texte des plaques du panorama ≥ 4,5:1 (encre `#1F2A4D` sur halo neige). L'interface ne dépend pas de l'ambiance (P5-D3) : ses contrastes restent ceux déjà testés en clair et en sombre.
+
+---
+
+## Piste 6 : qualité automatisée, mesure sans serveur et dossier portfolio (octobre 2026)
+
+### P6-D1. Tests de bout en bout : Chromium, téléphone et tablette, sur le build de production
+
+- **Décision :**
+  - Playwright lance les parcours clés sur deux appareils simulés dans Chromium : un téléphone (Pixel 7) et une tablette (Galaxy Tab S4).
+  - Les tests tournent sur le build de production servi par `vite preview`, avec le service worker, comme sur GitHub Pages.
+  - Ils vivent dans un workflow séparé, « Qualité » (`.github/workflows/qualite.yml`), qui tourne en parallèle du workflow CI existant.
+- **Alternatives écartées :**
+  - Safari (WebKit) et un iPhone simulé : installation plus lourde en CI et rendu WebKit de Playwright différent du vrai Safari iOS. Le test sur un vrai iPhone reste dans le protocole de test utilisateur.
+  - Tests ajoutés au job CI existant : CI plus longue, et conflits avec les autres pistes qui modifient ce fichier.
+- **Raison :** couvrir les parcours qui comptent pour l'utilisateur, au plus près du site publié, sans ralentir la CI rapide.
+
+### P6-D2. Accessibilité automatique : zéro violation axe tolérée
+
+- **Décision :** axe-core analyse chaque écran principal (Aujourd'hui vide et rempli, Tâches, Objectifs, Réglages, fenêtres « Nouvelle habitude » et de gestion), dans chaque thème, en clair et en sombre. Règles WCAG 2.0, 2.1 et 2.2 niveaux A et AA, plus les bonnes pratiques d'axe. Une seule violation fait échouer la CI.
+- **Alternative écartée :** ne bloquer que les violations « critiques » ou « graves ». Aucune violation n'existe aujourd'hui : autant garder la barre au plus haut.
+- **Raison :** l'accessibilité fait partie du positionnement ; une régression doit se voir dès la pull request.
+- **Limite :** axe ne voit qu'une partie des problèmes. Les vérifications manuelles sont listées en annexe du protocole de test utilisateur.
+
+### P6-D3. Critères PWA vérifiés par Playwright, pas par Lighthouse
+
+- **Décision :** un test Playwright vérifie le manifeste (nom, langue, affichage autonome, icônes 192 et 512 px, icône « maskable », toutes téléchargeables) et le rechargement hors ligne avec les données.
+- **Alternative écartée :** la catégorie PWA de Lighthouse. Elle a été retirée dans Lighthouse 12 ; épingler Lighthouse 11 aurait figé un outil obsolète.
+- **Raison :** vérifier ce que l'utilisateur vit vraiment (installer, ouvrir sans réseau, retrouver ses données).
+
+### P6-D4. Lighthouse en CI : seuils et rapports privés
+
+- **Décision :**
+  - Lighthouse CI (`@lhci/cli`, version épinglée et lancée par `npx`, pas installée dans le projet) mesure la page d'accueil du build de production, trois fois, en émulation mobile ; la médiane est comparée aux seuils.
+  - Seuils bloquants : performance ≥ 0,90, accessibilité ≥ 0,95, bonnes pratiques ≥ 0,90, décalage de mise en page (CLS) ≤ 0,1.
+  - Seuils indicatifs (avertissement) : SEO ≥ 0,80, plus grand affichage (LCP) ≤ 2,5 s, temps de blocage (TBT) ≤ 200 ms.
+  - Mesure au moment de la décision : 0,99 en performance et 1 dans les trois autres catégories ; les seuils laissent de la marge pour les variations des machines de CI.
+  - Les rapports sont gardés 14 jours comme artefacts GitHub Actions.
+- **Alternatives écartées :**
+  - Téléversement vers le stockage public temporaire de Lighthouse (serveurs de Google) : contraire au choix « aucun service tiers ».
+  - Seuils à 1 partout : trop sensibles au bruit de mesure.
+  - Lighthouse en dépendance du projet : installation lourde pour tous les contributeurs.
+- **Raison :** détecter une régression nette sans faire échouer la CI pour du bruit.
+
+### P6-D5. Mesure d'usage : aucun outil tiers, aucun envoi automatique
+
+- **Décision :**
+  - Aucun outil d'analyse tiers (Google Analytics, Plausible, Umami, Sentry…) et aucune requête réseau de mesure.
+  - Dans les Réglages, « Exporter mes statistiques anonymes » télécharge un fichier JSON. Ce sont les testeurs qui choisissent de l'envoyer, par le canal de leur choix.
+  - Le message de consentement du protocole de test dit exactement ce que contient le fichier.
+- **Alternatives écartées :**
+  - Un outil d'analyse respectueux de la vie privée : il faudrait un service tiers, un bandeau et un traitement à déclarer, pour un faible nombre de testeurs.
+  - Un point de collecte maison : il faudrait un serveur, absent du MVP.
+- **Raison :** cohérent avec la promesse « les données restent sur l'appareil » et avec l'absence de pression ; le testeur garde la main sur ce qu'il partage.
+
+### P6-D6. Contenu du fichier de statistiques : liste blanche
+
+- **Décision :**
+  - Le fichier est construit champ par champ (liste blanche) : un nouveau champ du modèle n'est jamais exporté par accident.
+  - Il contient seulement :
+    - la date de création et le nombre de jours prévus par semaine de chaque habitude ;
+    - chaque coche : rang de l'habitude, date, type (normale ou récupération) ;
+    - les dates de création et de fin des tâches ;
+    - les dates de création et d'atteinte des objectifs, avec leur nombre de jalons et de jalons terminés ;
+    - l'identifiant du thème (s'il est dans la liste des thèmes connus, sinon « autre »), la version de l'application (sinon « inconnue ») et la date de l'export.
+  - Jamais : aucun nom (habitude, tâche, objectif, jalon), aucun identifiant interne, aucune heure, aucune échéance, aucun réglage.
+  - Un test (`src/storage/anonymousStats.test.ts`) parcourt tout le fichier produit à partir de noms piégés et vérifie que chaque texte est une date, un type de coche, le thème ou la version.
+- **Alternative écartée :** exporter la sauvegarde complète en effaçant les noms. Tout nouveau champ texte ajouté plus tard aurait fui.
+- **Raison :** prouver par un test, et pas seulement promettre, qu'aucun texte libre ne sort.
+
+### P6-D7. Un fichier par testeur, sans identifiant
+
+- **Décision :** le fichier ne contient aucun identifiant d'installation. Le script d'analyse considère chaque fichier comme un testeur ; si un testeur envoie plusieurs fichiers, on garde le plus récent.
+- **Alternative écartée :** un identifiant aléatoire par installation, qui permettrait de dédoublonner mais servirait aussi à suivre une personne.
+- **Raison :** moins de données, moins de risques ; le dédoublonnage manuel suffit pour un petit groupe de testeurs.
+
+### P6-D8. Définition des indicateurs
+
+- **Décision :** (calculs dans `src/storage/anonymousStats.ts`, script `scripts/analyse-stats.ts`)
+  - **Premier jour** : première date présente dans le fichier (création ou coche).
+  - **Jour actif** : jour avec au moins une création, une coche, une tâche terminée ou un objectif atteint.
+  - **Indicateur principal, coches par testeur et par semaine** : coches d'habitudes ÷ semaines observées (du premier jour à l'export, au moins une semaine), puis moyenne et médiane entre testeurs.
+  - **Rétention à J7 (J30)** : parmi les testeurs dont l'export date d'au moins 7 (30) jours après leur premier jour, part de ceux qui ont eu au moins un jour actif à partir du 7e (30e) jour.
+  - **Habitude créée le premier jour** : part des testeurs dont une habitude a été créée le premier jour.
+  - **Récupération** : part des testeurs qui l'ont utilisée au moins une fois, et part des coches faites par récupération.
+- **Alternatives écartées :** rétention « bornée » (actif exactement le 7e jour, ou dans la semaine 2) : trop instable avec une dizaine de testeurs.
+- **Limites connues :** une coche de récupération est datée du jour rattrapé, pas du jour du geste ; les jalons cochés et les coches annulées ne laissent pas de date. Les jours actifs sont donc légèrement sous-estimés.
+- **Raison :** des définitions simples, calculables sans serveur, qu'on pourra comparer d'une bêta à l'autre.
+
+### P6-D9. Script d'analyse sans dépendance
+
+- **Décision :** les calculs sont des fonctions pures testées par Vitest ; le script `scripts/analyse-stats.ts` ne fait que lire le dossier et afficher le tableau Markdown. Il tourne avec Node 22 seul (exécution native de TypeScript), sans `tsx` ni `ts-node`.
+- **Raison :** aucune dépendance de plus, et le calcul des indicateurs est couvert par les tests.

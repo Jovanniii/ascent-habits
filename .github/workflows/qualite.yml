@@ -1,0 +1,60 @@
+name: Qualité
+
+# Filets de sécurité de la piste 6 : parcours de bout en bout, accessibilité (axe),
+# PWA et Lighthouse. Aucun service tiers : les rapports restent dans les artefacts
+# de GitHub Actions (voir P6-D2 et P6-D4 dans docs/journal-decisions.md).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qualite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bout-en-bout:
+    name: Parcours, accessibilité et PWA (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Rapport Playwright
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 14
+
+  lighthouse:
+    name: Lighthouse (performance, accessibilité, bonnes pratiques)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lighthouse
+      - name: Rapports Lighthouse
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-lighthouse
+          path: .lighthouseci/rapports/
+          retention-days: 14

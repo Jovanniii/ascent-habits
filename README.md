@@ -1,41 +1,57 @@
 # Ascent (nom provisoire)
 
-Application personnelle d'habitudes, de tâches et d'objectifs : ouvrir, cocher, repartir en moins d'une minute.
-La gamification est un décor agréable, sans pression ni message culpabilisant.
+**Habitudes, tâches et objectifs dans une seule application : ouvrir, cocher, repartir en moins d'une minute.**
+La gamification est un décor de montagne agréable, sans pression ni message culpabilisant.
 
-Projet de portfolio product manager. Voir [docs/](docs/) pour la vision, le backlog, la direction artistique et le [journal de décisions](docs/journal-decisions.md).
+Projet de portfolio product manager, de la vision à la mise en ligne.
+👉 Essayer l'application : https://jovanniii.github.io/ascent-habits/ (installable sur téléphone, fonctionne hors ligne).
 
-> Itération 3 : calendrier de réalisations (vue globale en carte de chaleur et vue par habitude), en plus du thème montagne provisoire et du thème « Sobre ».
+## Le problème
 
-## Fonctionnalités actuelles
+Les gens répartissent leurs tâches, leurs habitudes et leurs objectifs dans plusieurs outils (notes, agendas, applications de suivi) et finissent par abandonner, faute de vue d'ensemble et de motivation visuelle. Les applications d'habitudes existantes misent souvent sur la pression : séries remises à zéro, notifications insistantes, messages culpabilisants.
 
-- **Habitudes** :
-  - fréquence quotidienne ou à jours précis ;
-  - coche en un toucher, annulable ;
-  - série actuelle exprimée en nombre de validations ;
-  - paliers (21 jours, 2 mois, 6 mois, 1 an) ;
-  - récupération d'un jour manqué, limitée à une par semaine ;
-  - pause, archivage.
-- **Tâches** : ajout avec échéance facultative, coche, historique.
-- **Calendrier** :
-  - vue globale : carte de chaleur selon la part des habitudes prévues validées, détail d'un jour (habitudes, tâches terminées) ;
-  - vue par habitude : jours validés, rattrapés ou notés après coup, séries mises en évidence, série actuelle et meilleure série ;
-  - un jour passé peut être noté « fait après coup », sans effet sur la série ni sur le quota de rattrapage.
-- **Objectifs** : jalons ajoutables, modifiables et supprimables à tout moment, progression recalculée, action « Marquer comme atteint ».
-- **Réglages** :
-  - activation ou désactivation des animations ;
-  - choix du thème ;
-  - export et import JSON, avec export de sécurité avant tout remplacement.
-- **Thèmes** :
-  - « Montagne » (par défaut pour les nouvelles installations) : chaque habitude du jour s'affiche dans un petit panorama où un alpiniste progresse vers le prochain palier ; un toucher sur le panorama coche l'habitude ;
-  - « Sobre » : interface sans illustration.
-- **PWA** : installable sur l'écran d'accueil, fonctionne hors ligne.
+## La vision
 
-Les données restent sur l'appareil : aucun compte, aucun serveur, aucune donnée envoyée.
+Une seule application pour cocher en 30 secondes ses habitudes, ses tâches et ses objectifs, dans un univers visuel qui donne envie de l'ouvrir.
 
-## Démarrer
+- **Habitude** : récurrente, sans fin, avec une série et des paliers (21 jours, 2 mois, 6 mois, 1 an).
+- **Tâche** : ponctuelle, elle disparaît une fois faite.
+- **Objectif** : une destination, avec des jalons qu'on peut ajouter ou modifier en route.
+- **Calendrier** : une carte de chaleur des jours accomplis et, pour chaque habitude, ses séries ; un jour passé peut être noté « fait après coup », sans effet sur la série.
 
-Prérequis : Node.js 22.
+Chaque habitude du jour s'affiche dans un petit panorama où un alpiniste progresse vers le prochain palier.
+
+## Les choix assumés
+
+- **La rapidité avant tout** : un toucher pour cocher, l'écran « Aujourd'hui » montre tout ce qui compte.
+- **Aucune culpabilisation** : un jour manqué se rattrape le lendemain (une fois par semaine) ; aucun message négatif, aucune pénalité.
+- **La gamification comme décor**, pas comme levier de rétention : pas de classement, pas de réseau social, pas de notification par défaut.
+- **Les données restent sur l'appareil** : aucun compte, aucun serveur, export et import manuels.
+- **Mesure sans surveillance** : aucun outil d'analyse tiers ; les testeurs envoient volontairement un fichier de statistiques anonymes, sans aucun texte saisi.
+- **Moteur et habillage séparés** : la montagne est un thème parmi d'autres à venir (ciel, port, désert, fond marin).
+- **Accessible** : contrastes vérifiés, tailles tactiles, lecteurs d'écran, réduction des animations.
+
+Chaque arbitrage est consigné, avec les alternatives écartées, dans le [journal de décisions](docs/journal-decisions.md).
+
+## Captures d'écran
+
+> Section réservée : captures définitives à ajouter (téléphone, thème Montagne et thème Sobre, clair et sombre).
+
+| Aujourd'hui | Objectifs | Réglages |
+| --- | --- | --- |
+| *(capture à venir)* | *(capture à venir)* | *(capture à venir)* |
+
+Calendrier (itération 3, 360 × 640) :
+
+| Vue globale, Montagne | Vue par habitude, Montagne | Vue globale, Sobre sombre |
+| --- | --- | --- |
+| ![Calendrier global, thème Montagne](docs/captures/iteration-3/globale-montagne-clair.png) | ![Calendrier d'une habitude, thème Montagne](docs/captures/iteration-3/habitude-montagne-clair.png) | ![Calendrier global, thème Sobre en mode sombre](docs/captures/iteration-3/globale-sobre-sombre.png) |
+
+Toutes les captures de l'itération 3 : [docs/captures/iteration-3/](docs/captures/iteration-3/).
+
+## Lancer le projet
+
+Prérequis : Node.js 22.18 ou plus récent.
 
 ```bash
 npm ci
@@ -45,52 +61,68 @@ npm run dev        # http://localhost:5173/ascent-habits/
 | Script | Rôle |
 | --- | --- |
 | `npm run dev` | Serveur de développement |
-| `npm test` | Tests (Vitest) |
-| `npm run test:coverage` | Tests avec couverture du moteur et du stockage |
+| `npm test` | Tests unitaires et d'interface (Vitest) |
+| `npm run test:coverage` | Tests avec couverture du moteur, du stockage et des thèmes |
+| `npm run test:e2e` | Parcours de bout en bout, accessibilité (axe) et PWA (Playwright, téléphone et tablette) |
+| `npm run lighthouse` | Lighthouse sur le build de production (lancer `npm run build` avant) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Vérification TypeScript |
 | `npm run build` | Build de production dans `dist/` |
 | `npm run preview` | Sert le build de production localement |
+| `npm run stats:analyse -- <dossier>` | Analyse des fichiers de statistiques anonymes reçus (tableau Markdown) |
 | `npm run icons` | Régénère les icônes PWA depuis `public/favicon.svg` |
+| `npm run assets:optimize` | Optimise les illustrations SVG du thème montagne (`assets:check` pour vérifier sans modifier) |
+| `npm run check:budget` | Vérifie le budget de poids du build (JavaScript, CSS, polices, illustrations) |
+
+Avant le premier `npm run test:e2e` : `npx playwright install chromium`.
+
+### Qualité automatisée
+
+À chaque pull request :
+
+- **CI** (`.github/workflows/ci.yml`) : lint, types, tests avec seuils de couverture, build, illustrations optimisées et budget de poids.
+- **Qualité** (`.github/workflows/qualite.yml`) :
+  - parcours clés sur téléphone et tablette simulés (créer, cocher et annuler une habitude, tâche, objectif avec jalons, thème, export puis import, rechargement) ;
+  - axe sur chaque écran, dans chaque thème, en clair et en sombre : aucune violation tolérée ;
+  - manifeste PWA et fonctionnement hors ligne ;
+  - Lighthouse : performance ≥ 0,90, accessibilité ≥ 0,95, bonnes pratiques ≥ 0,90 (seuils détaillés dans P6-D4).
 
 ## Architecture
 
 ```
 src/
   engine/     Moteur : modèle, règles métier et commandes, en TypeScript pur
-  storage/    Stockage abstrait (AppRepository), localStorage, validation, export/import
-  themes/     Thèmes interchangeables : contrat, registre, progression neutre (progress.ts),
-              « mountain » (scène SVG) et « plain » (sobre)
+  storage/    Stockage abstrait (localStorage), validation, export/import, statistiques anonymes
+  themes/     Thèmes interchangeables : contrat, registre, « mountain » et « plain » (sobre)
   ui/         Interface React (écrans, composants, état)
+tests/        Tests de bout en bout (Playwright) et configuration Lighthouse
+scripts/      Analyse des statistiques anonymes
 ```
 
-- **Moteur (`src/engine`) :**
-  - Il ne dépend ni de React, ni du stockage, ni des thèmes, ni des API du navigateur. Une règle ESLint le vérifie.
-  - Il ne contient aucune référence au thème montagne. Un test le vérifie.
-- **Logique métier :**
-  - Les séries, la récupération, les paliers, le calendrier et la progression des objectifs sont des fonctions pures testées.
-  - Chaque action de l'interface est une commande pure `(données, entrée, contexte) => données`. L'heure et la génération d'identifiants sont injectées par le contexte.
-- **Réglages métier :** la limite de récupération et les paliers sont des constantes de `src/engine/config.ts`.
-- **Thèmes :**
-  - Un thème est un dossier `src/themes/<id>/` qui exporte `theme` depuis `theme.ts` : jetons de couleur (dont ceux du calendrier) et, s'il le souhaite, une illustration décorative des habitudes et un décor des jours du calendrier.
-  - L'interface garde le bouton de coche et tous les textes ; le thème ne fournit que du décor.
-  - Aucune référence à la montagne en dehors de `src/themes/mountain/` (vérifié par un test), et dépendances entre modules contrôlées par ESLint.
-- **Stockage :** l'interface `AppRepository` est asynchrone. Un backend ou IndexedDB pourra remplacer le localStorage en v2 sans toucher au reste.
+- Le moteur ne dépend ni de React, ni du stockage, ni des thèmes, ni du navigateur (règle ESLint et test garde-fou).
+- Les séries, la récupération, les paliers, le calendrier et la progression des objectifs sont des fonctions pures testées.
+- Un thème est un dossier `src/themes/<id>/` : jetons de couleur et, s'il le souhaite, une illustration. Aucune référence à la montagne en dehors de son dossier (vérifié par un test).
 
-## Déploiement sur GitHub Pages
+Stack : React, TypeScript, Vite, PWA (vite-plugin-pwa), Vitest, Playwright, déploiement GitHub Pages.
 
-Le workflow `.github/workflows/deploy.yml` construit et déploie l'application à chaque push sur `main`.
+## Déploiement et installation
 
-Une seule fois, dans les réglages du dépôt : **Settings → Pages → Build and deployment → Source : « GitHub Actions »**.
+Le workflow `.github/workflows/deploy.yml` publie l'application sur GitHub Pages à chaque push sur `main` (réglage unique du dépôt : **Settings → Pages → Source : « GitHub Actions »**).
 
-L'application est ensuite servie à l'adresse `https://<compte>.github.io/ascent-habits/`.
+- **Android (Chrome)** : ouvrir l'adresse, puis menu ⋮ → « Installer l'application ».
+- **iPhone (Safari)** : ouvrir l'adresse, puis Partager → « Sur l'écran d'accueil ».
 
-Le workflow `.github/workflows/ci.yml` lance le lint, la vérification des types, les tests et le build sur chaque pull request.
-
-## Installer sur un téléphone
-
-- **Android (Chrome)** : ouvrir l'adresse, puis menu ⋮ → « Installer l'application » ou « Ajouter à l'écran d'accueil ».
-- **iPhone (Safari)** : ouvrir l'adresse, puis bouton Partager → « Sur l'écran d'accueil ».
-
-Une fois installée, l'application s'ouvre en plein écran et fonctionne sans connexion.
 Pensez à exporter régulièrement vos données depuis les Réglages.
+
+## Documents
+
+| Document | Contenu |
+| --- | --- |
+| [01 – Problème et vision](docs/01-probleme-vision.md) | Problème, personas, proposition de valeur, positionnement |
+| [06 – Backlog du MVP](docs/06-backlog-mvp.md) | User stories et priorités (M, S, C, W), critères de réussite |
+| [07 – Direction artistique Montagne](docs/07-direction-artistique-montagne.md) | Intention, principes, palette, animations du thème pilote |
+| [Brief d'illustration](docs/brief-assets.md) | Commande des illustrations du thème Montagne : liste des fichiers, contraintes, livraison |
+| [Pipeline d'assets](docs/pipeline-assets.md) | Comment livrer les illustrations sans toucher au code, et budget de performance |
+| [Journal de décisions](docs/journal-decisions.md) | Chaque arbitrage, ses alternatives et sa raison |
+| [Protocole de test utilisateur](docs/protocole-test-utilisateur.md) | Test de 15 minutes sur téléphone, consentement, grille d'observation, vérifications d'accessibilité manuelles |
+| [Étude de cas](docs/etude-de-cas.md) | Squelette de l'étude de cas produit : problème, décisions, métriques, résultats, apprentissages |

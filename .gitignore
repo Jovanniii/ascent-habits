@@ -22,3 +22,8 @@ coverage
 .DS_Store
 *.suo
 *.sw?
+
+# Rapports des tests de bout en bout et de Lighthouse
+test-results
+playwright-report
+.lighthouseci
