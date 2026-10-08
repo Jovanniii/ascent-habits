@@ -558,6 +558,7 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 ### P5c-D1. Illustrations dessinées dans le dépôt, à défaut de visuels fournis
 
 - **Décision :** aucun visuel n'ayant été produit, les 31 illustrations du manifeste sont dessinées en SVG à la main (formes arrondies, aplats, palette du Doc 07), puis passées par `npm run assets:optimize`. Les plans de montagnes reprennent la silhouette et la hauteur des chaînes provisoires (sommets entre y = 54 et 94 dans le repère 1280 × 120) pour ne pas cacher la montagne de l'habitude.
+- **Alignement sur le brief (`docs/brief-assets.md`, PR #8) :** noms, viewBox, ancrages et poids visés respectés (le plus lourd : 1,7 Ko) ; bords gauche et droit des plans à la même hauteur ; tente : alpiniste assis devant, tasse à la main ; sommet d'objectif aux couleurs du plan lointain. Les images clés d'animation (section 5.2 du brief) ne sont pas produites : elles ne sont pas encore au manifeste.
 - **Alternatives écartées :** attendre une livraison (rien de prévu) ; générer des images bitmap (refusées par le pipeline).
 - **Raison :** l'application gagne un vrai habillage sans toucher à la logique ; chaque fichier peut être remplacé plus tard par un visuel d'illustrateur, au même nom.
 
