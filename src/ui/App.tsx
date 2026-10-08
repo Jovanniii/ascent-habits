@@ -13,6 +13,8 @@ import { TasksScreen } from './screens/TasksScreen.tsx'
 import { TodayScreen } from './screens/TodayScreen.tsx'
 import { AppStoreProvider } from './state/AppStoreProvider.tsx'
 import { useAppStore } from './state/store.ts'
+import { AmbianceProvider } from './state/AmbianceProvider.tsx'
+import type { PreferenceStorage } from './state/useAmbiance.ts'
 
 const systemNow = () => new Date()
 
@@ -24,6 +26,8 @@ interface Props {
   prefersReducedMotion?: boolean
   /** Faux si le stockage de l'appareil est indisponible (navigation privée stricte…). */
   storageAvailable?: boolean
+  /** Préférences propres à l'appareil (réglage « Ambiance »), hors des données exportées. */
+  preferences?: PreferenceStorage
 }
 
 type LoadState =
@@ -36,7 +40,13 @@ function initialData(prefersReducedMotion: boolean): AppData {
   return createEmptyAppData({ themeId: DEFAULT_THEME_ID, animationsEnabled: !prefersReducedMotion })
 }
 
-export function App({ repository, now = systemNow, prefersReducedMotion = false, storageAvailable = true }: Props) {
+export function App({
+  repository,
+  now = systemNow,
+  prefersReducedMotion = false,
+  storageAvailable = true,
+  preferences,
+}: Props) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
 
   useEffect(() => {
@@ -81,7 +91,9 @@ export function App({ repository, now = systemNow, prefersReducedMotion = false,
   }
   return (
     <AppStoreProvider initialData={state.data} repository={repository} now={now}>
-      <Shell storageAvailable={storageAvailable} />
+      <AmbianceProvider now={now} storage={preferences}>
+        <Shell storageAvailable={storageAvailable} />
+      </AmbianceProvider>
     </AppStoreProvider>
   )
 }

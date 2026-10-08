@@ -15,7 +15,8 @@
   --space: 16px;
   --touch: 48px;
   --tabbar-height: 64px;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Police fournie par le thème (--font-body), sinon police système. */
+  font-family: var(--font-body, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
   font-size: 100%;
   line-height: 1.5;
   color-scheme: light dark;
@@ -699,6 +700,46 @@ main.screen {
   flex: 1;
 }
 
+.task__illustration {
+  display: flex;
+  flex: none;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.task__checked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 4px;
+  background: var(--color-done);
+  color: var(--color-on-done);
+}
+
+.task__checked .check__icon {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes task-clearing-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .task--clearing {
+    animation: task-clearing-fade 700ms ease-in forwards;
+  }
+}
+
 /* Objectifs */
 
 .goal {
@@ -741,6 +782,48 @@ main.screen {
   border-radius: calc(var(--radius) * 0.75);
   background: var(--color-surface-muted);
   font-weight: 600;
+}
+
+.goal__scene {
+  display: flex;
+  border-radius: calc(var(--radius) * 0.75);
+  overflow: hidden;
+}
+
+.goal--celebrating .goal__name {
+  font-weight: 700;
+}
+
+.goal__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-done);
+  color: var(--color-on-done);
+}
+
+@keyframes goal-badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .goal--celebrating .goal__badge {
+    animation: goal-badge-pop 500ms ease-out;
+  }
 }
 
 /* Divers */
@@ -1213,4 +1296,33 @@ main.screen {
     padding-left: 12px;
     padding-right: 12px;
   }
+}
+
+/* En-tête avec une action à droite du titre (Aujourd'hui → Panorama, Panorama → Retour). */
+
+.screen__header--action {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: calc(var(--space) / 2);
+}
+
+.screen__header--action > .button {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
+/* Panorama : le détail en texte sous le décor. */
+
+.panorama-list__item {
+  padding: calc(var(--space) * 0.75) var(--space);
+}
+
+.panorama-list__name {
+  font-size: 1.0625rem;
+}
+
+.panorama-list__detail {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
 }

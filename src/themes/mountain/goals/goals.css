@@ -1,0 +1,96 @@
+/*
+ * Scène des objectifs (thème montagne, visuels provisoires). Elle réutilise la
+ * palette et les formes de .mountain-scene (mountain.css).
+ */
+
+.goal-summit {
+  height: auto;
+  aspect-ratio: 320 / 112;
+}
+
+.goal-summit__pennant {
+  opacity: 0.55;
+}
+
+.goal-summit__pennant.is-planted {
+  opacity: 1;
+}
+
+.goal-summit__pennant-cloth {
+  fill: var(--mountain-snow);
+  stroke: var(--mountain-ink);
+  stroke-width: 0.5;
+}
+
+.goal-summit__pennant:not(.is-planted) .goal-summit__pennant-cloth {
+  fill: none;
+}
+
+.goal-summit__sparkles {
+  fill: var(--mountain-snow);
+  stroke: var(--mountain-ink);
+  stroke-width: 0.4;
+}
+
+.goal-summit__climber,
+.goal-summit__flag,
+.goal-summit__sparkles {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.goal-summit__flag {
+  transform-origin: 0% 50%;
+}
+
+@keyframes goal-summit-hop {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  25%,
+  75% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes goal-summit-wave {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.75);
+  }
+}
+
+@keyframes goal-summit-sparkle {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animations en « opt-in », comme le reste du thème. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='full'] .goal-summit[data-motion='on'] .goal-summit__position {
+    transition: transform 600ms ease-out;
+  }
+
+  :root[data-motion='full'] .goal-summit[data-motion='on'][data-celebrating='true'] .goal-summit__climber {
+    animation: goal-summit-hop 900ms ease-in-out 2;
+  }
+
+  :root[data-motion='full'] .goal-summit[data-motion='on'][data-celebrating='true'] .goal-summit__flag {
+    animation: goal-summit-wave 600ms ease-in-out 3;
+  }
+
+  :root[data-motion='full'] .goal-summit[data-motion='on'][data-celebrating='true'] .goal-summit__sparkles {
+    animation: goal-summit-sparkle 500ms ease-out;
+  }
+}
