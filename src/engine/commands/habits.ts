@@ -138,6 +138,42 @@ export function cancelRecovery(data: AppData, habitId: string, ctx: CommandConte
   }
 }
 
+/**
+ * Note un jour passé prévu comme « fait après coup » (depuis le calendrier).
+ * Ce jour figure dans l'historique sans compter dans la série ni consommer le
+ * quota de récupération. Si le jour peut être rattrapé (série à sauver), c'est
+ * le rattrapage qui doit être utilisé : la commande le refuse.
+ */
+export function logLateDay(data: AppData, habitId: string, date: LocalDate, ctx: CommandContext): AppData {
+  const habit = findHabit(data, habitId)
+  if (date >= ctx.today) {
+    throw new CommandError('invalid-date', 'Seul un jour passé peut être noté après coup.')
+  }
+  if (!isScheduledOn(habit, date)) {
+    throw new CommandError('not-scheduled', "L'habitude n'était pas prévue ce jour-là.")
+  }
+  if (hasCompletion(data, habitId, date)) {
+    throw new CommandError('invalid-state', 'Ce jour est déjà validé.')
+  }
+  const recovery = getRecoveryState(habit, data.completions, ctx.today)
+  if (recovery.status === 'available' && recovery.missedDate === date) {
+    throw new CommandError('invalid-state', 'Ce jour peut être rattrapé : le rattrapage préserve la série.')
+  }
+  return { ...data, completions: [...data.completions, { habitId, date, kind: 'late' }] }
+}
+
+/** Retire un jour noté « fait après coup ». */
+export function removeLateDay(data: AppData, habitId: string, date: LocalDate): AppData {
+  findHabit(data, habitId)
+  if (!data.completions.some((c) => c.habitId === habitId && c.date === date && c.kind === 'late')) {
+    throw new CommandError('invalid-state', 'Aucun jour noté après coup à retirer.')
+  }
+  return {
+    ...data,
+    completions: data.completions.filter((c) => !(c.habitId === habitId && c.date === date && c.kind === 'late')),
+  }
+}
+
 export function pauseHabit(data: AppData, habitId: string, ctx: CommandContext): AppData {
   const habit = findHabit(data, habitId)
   if (habit.status !== 'active') {

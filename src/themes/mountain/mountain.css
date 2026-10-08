@@ -292,3 +292,88 @@
     transform: translateX(calc(var(--panorama-scroll, 0) * -0.5px));
   }
 }
+
+/*
+ * Calendrier « carnet de randonnée ». Les variables sont déclarées sur la case
+ * (.mountain-day) ; le mode sombre les surcharge plus bas.
+ */
+.mountain-day {
+  --trail-day-ink: #4f6d8f;
+  --trail-day-halo: #f7f4ef;
+  --trail-day-muted: #66738f;
+  --trail-day-ridge: #c9d4e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.mountain-day__ridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  width: 100%;
+  height: 42%;
+}
+
+.mountain-day__ridge path {
+  fill: var(--trail-day-ridge);
+}
+
+.mountain-day__symbol {
+  width: 26px;
+  height: 26px;
+  overflow: visible;
+}
+
+.mountain-day__stamp {
+  fill: var(--trail-day-halo);
+  stroke: var(--trail-day-ink);
+  stroke-width: 1.6;
+}
+
+.mountain-day__stamp.is-dashed,
+.mountain-day__muted-line.is-dashed {
+  stroke-dasharray: 3 2.4;
+}
+
+.mountain-day__ink-fill {
+  fill: var(--trail-day-ink);
+}
+
+.mountain-day__muted-fill {
+  fill: var(--trail-day-muted);
+}
+
+.mountain-day__ink-line,
+.mountain-day__halo-line,
+.mountain-day__muted-line {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mountain-day__ink-line {
+  stroke: var(--trail-day-ink);
+}
+
+.mountain-day__halo-line {
+  stroke: var(--trail-day-halo);
+}
+
+.mountain-day__muted-line {
+  stroke: var(--trail-day-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mountain-day {
+    --trail-day-ink: #c4cce0;
+    --trail-day-halo: #1f2a4d;
+    --trail-day-muted: #a3afcb;
+    --trail-day-ridge: #3e4f7a;
+  }
+}

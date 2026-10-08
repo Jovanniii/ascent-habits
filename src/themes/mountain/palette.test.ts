@@ -51,6 +51,26 @@ describe('palettes de la scène (Doc 07)', () => {
   })
 })
 
+describe('palette du calendrier', () => {
+  const section = css.slice(css.indexOf('Calendrier « carnet de randonnée »'))
+  const read = (part: string): Record<string, string> =>
+    Object.fromEntries([...part.matchAll(/(--trail-day-[a-z-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1]!, m[2]!]))
+  const [lightPart, darkPart = ''] = section.split('@media (prefers-color-scheme: dark)')
+  const modes: Record<'light' | 'dark', Record<string, string>> = { light: { ...read(lightPart!), surface: '#ffffff' }, dark: { ...read(darkPart), surface: '#27335a' } }
+
+  it.each(['light', 'dark'] as const)('garantit des contrastes d’au moins 3:1 pour les symboles des jours (%s)', (mode) => {
+    const p = modes[mode]
+    expect(Object.keys(p)).toHaveLength(5)
+    // Tampon (empreinte, corde, sac) : encre sur halo, et contour du tampon sur la case.
+    expect(contrast(p['--trail-day-ink']!, p['--trail-day-halo']!)).toBeGreaterThanOrEqual(3)
+    expect(contrast(p['--trail-day-ink']!, p.surface!)).toBeGreaterThanOrEqual(3)
+    expect(contrast(p['--trail-day-ink']!, p['--trail-day-ridge']!)).toBeGreaterThanOrEqual(3)
+    // Tente, lune et cercle en attente : symboles neutres, mais lisibles.
+    expect(contrast(p['--trail-day-muted']!, p.surface!)).toBeGreaterThanOrEqual(3)
+    expect(contrast(p['--trail-day-muted']!, p['--trail-day-ridge']!)).toBeGreaterThanOrEqual(3)
+  })
+})
+
 describe('animations de la scène', () => {
   const marker = '@media (prefers-reduced-motion: no-preference)'
 

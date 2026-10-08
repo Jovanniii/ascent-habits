@@ -18,6 +18,12 @@ describe('parseAppData', () => {
     expect(parseAppData(JSON.parse(JSON.stringify(data)))).toEqual(data)
   })
 
+  it('accepte les jours notés « fait après coup »', () => {
+    const data = sampleAppData()
+    const withLate = { ...data, completions: [{ habitId: data.habits[0]!.id, date: data.habits[0]!.createdOn, kind: 'late' as const }] }
+    expect(parseAppData(JSON.parse(JSON.stringify(withLate))).completions).toEqual(withLate.completions)
+  })
+
   it('écarte les champs inconnus', () => {
     const data = sampleAppData()
     const raw = JSON.parse(JSON.stringify(data))

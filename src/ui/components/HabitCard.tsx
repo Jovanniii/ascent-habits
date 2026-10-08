@@ -10,6 +10,7 @@ import { deriveHabitProgress, getTheme, type HabitGesture, type HabitProgress } 
 import { capitalize, formatFrequency, formatMissedDay, formatStage, formatValidations, plural } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
 import { useMotionAllowed } from '../state/useMotionAllowed.ts'
+import { celebrationText, recoveryFeedback } from '../recoveryFeedback.ts'
 import { HabitManageDialog } from './HabitManageDialog.tsx'
 
 interface Props {
@@ -36,13 +37,6 @@ function nextStageText(progress: HabitProgress): string {
 function compactTiersText(progress: HabitProgress): string {
   const next = `${formatStage(progress.next)} dans ${progress.next.daysRemaining} j`
   return progress.highestStage ? `Palier ${formatStage(progress.highestStage)} · prochain ${next}` : `Prochain palier ${next}`
-}
-
-/** Message positif quand une action fait atteindre une nouvelle étape. */
-function celebrationText(habit: Habit, progress: HabitProgress): string | undefined {
-  return progress.celebrated
-    ? `Nouveau palier atteint pour « ${habit.name} » : ${formatStage(progress.celebrated)}. Bravo !`
-    : undefined
 }
 
 export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
@@ -181,18 +175,12 @@ export function HabitCard({ habit, variant = 'compact', index = 0 }: Props) {
           type="button"
           className="button button--secondary button--small"
           aria-label={`Rattraper ${formatMissedDay(recovery.missedDate, today)} pour « ${habit.name} »`}
-          onClick={() => {
-            // Si la coche du jour est déjà faite, le rattrapage peut faire atteindre un palier :
-            // il est célébré comme une coche, quel que soit l'ordre des gestes.
-            const after = deriveHabitProgress(
-              habit,
-              [...data.completions, { habitId: habit.id, date: recovery.missedDate, kind: 'recovery' }],
-              today,
-            ).actual
-            const recovered = `${capitalize(formatMissedDay(recovery.missedDate, today))} rattrapé.`
-            const celebration = celebrationText(habit, after)
-            run((d, ctx) => recoverMissedDay(d, habit.id, ctx), celebration ? `${recovered} ${celebration}` : recovered)
-          }}
+          onClick={() =>
+            run(
+              (d, ctx) => recoverMissedDay(d, habit.id, ctx),
+              recoveryFeedback(habit, data.completions, recovery.missedDate, today),
+            )
+          }
         >
           Rattraper {formatMissedDay(recovery.missedDate, today)}
         </button>

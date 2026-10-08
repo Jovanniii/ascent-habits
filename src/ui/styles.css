@@ -953,7 +953,7 @@ main.screen {
   right: 0;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
@@ -986,6 +986,316 @@ main.screen {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Calendrier de réalisations */
+
+.screen--calendar {
+  gap: 10px;
+}
+
+.calendar-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+}
+
+.calendar-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.calendar-stat__label {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.calendar-stat__value {
+  margin: 0;
+  font-weight: 700;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.month-nav__title {
+  font-size: 1.125rem;
+  text-align: center;
+}
+
+.month-nav__button svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.month-nav__button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Grille : 7 colonnes, cases d'au moins 44 px dès 360 px de large. */
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar__row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar--heat .calendar__row {
+  column-gap: 2px;
+}
+
+.calendar__weekday {
+  padding-bottom: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.calendar__cell,
+.calendar__empty {
+  position: relative;
+  min-width: 0;
+}
+
+.calendar-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  min-width: 44px;
+  min-height: 48px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  isolation: isolate;
+}
+
+.calendar-day__number {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.calendar-day[aria-current='date'] .calendar-day__number {
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.calendar__cell[aria-selected='true'] .calendar-day {
+  box-shadow: inset 0 0 0 2px var(--color-text);
+}
+
+.calendar-day[data-state='future'],
+.calendar-day[data-state='beforeCreation'],
+.calendar-day[data-future='true'] {
+  color: var(--color-text-muted);
+}
+
+/* Bande de série (rendu par défaut, sans décor de thème). */
+.calendar--habit:not(.calendar--themed) .calendar-day[data-chain]::before,
+.calendar--habit:not(.calendar--themed) .calendar-day[data-bridge]::before {
+  content: '';
+  position: absolute;
+  inset: 6px 0;
+  z-index: -1;
+  background: var(--calendar-chain);
+}
+
+.calendar--habit:not(.calendar--themed) .calendar-day[data-chain='start']::before {
+  left: 4px;
+  border-radius: 999px 0 0 999px;
+}
+
+.calendar--habit:not(.calendar--themed) .calendar-day[data-chain='end']::before {
+  right: 4px;
+  border-radius: 0 999px 999px 0;
+}
+
+.day-glyph {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--calendar-mark);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.day-glyph--muted {
+  stroke: var(--color-text-muted);
+  stroke-width: 2;
+}
+
+.day-glyph__dashed {
+  stroke-width: 1.75;
+  stroke-dasharray: 3 2.5;
+}
+
+.calendar-day__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Carte de chaleur */
+.calendar--heat .calendar-day {
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.calendar--heat .calendar-day:not([data-level]) {
+  border-style: dashed;
+  background: transparent;
+}
+
+.calendar--heat .calendar-day[data-future='true'] {
+  border-color: transparent;
+}
+
+.calendar-day__fraction {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar--heat .calendar-day[data-level='0'],
+.heat-legend__swatch[data-level='0'] {
+  background: var(--calendar-heat-0);
+  color: var(--calendar-on-heat-0);
+}
+
+.calendar--heat .calendar-day[data-level='1'],
+.heat-legend__swatch[data-level='1'] {
+  background: var(--calendar-heat-1);
+  color: var(--calendar-on-heat-1);
+}
+
+.calendar--heat .calendar-day[data-level='2'],
+.heat-legend__swatch[data-level='2'] {
+  background: var(--calendar-heat-2);
+  color: var(--calendar-on-heat-2);
+}
+
+.calendar--heat .calendar-day[data-level='3'],
+.heat-legend__swatch[data-level='3'] {
+  background: var(--calendar-heat-3);
+  color: var(--calendar-on-heat-3);
+}
+
+.calendar--heat .calendar-day[data-level='4'],
+.heat-legend__swatch[data-level='4'] {
+  background: var(--calendar-heat-4);
+  color: var(--calendar-on-heat-4);
+}
+
+/* Légendes */
+.calendar-legend,
+.heat-legend__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.calendar-legend__item,
+.heat-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-legend__swatch {
+  position: relative;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-legend__swatch .calendar-day__mark {
+  width: 28px;
+  height: 28px;
+}
+
+.heat-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heat-legend__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.heat-legend__swatch {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+/* Détail d'un jour */
+.calendar-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-detail__title {
+  font-size: 1.0625rem;
+}
+
+.calendar-detail__subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.calendar-detail__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+/* Sur un petit écran, la grille récupère un peu de marge latérale. */
+@media (max-width: 380px) {
+  .app__main:has(.calendar) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 
 /* En-tête avec une action à droite du titre (Aujourd'hui → Panorama, Panorama → Retour). */

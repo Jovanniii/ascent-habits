@@ -131,7 +131,7 @@ function parseCompletion(c: Checker, value: unknown, path: string): Completion {
   return {
     habitId: c.text(raw.habitId, `${path}.habitId`),
     date: c.date(raw.date, `${path}.date`),
-    kind: c.oneOf(raw.kind, ['normal', 'recovery'] as const, `${path}.kind`),
+    kind: c.oneOf(raw.kind, ['normal', 'recovery', 'late'] as const, `${path}.kind`),
   }
 }
 

@@ -1,5 +1,6 @@
 import type { Theme } from '../types.ts'
 import { MountainScene } from './MountainScene.tsx'
+import { TrailDayMark } from './TrailDayMark.tsx'
 import { GoalSummitScene } from './goals/GoalSummitScene.tsx'
 import { TaskObstacle } from './tasks/TaskObstacle.tsx'
 import { Panorama } from './scene/Panorama.tsx'
@@ -32,6 +33,18 @@ export const theme: Theme = {
       '--color-done': '#4f6d8f',
       '--color-on-done': '#ffffff',
       '--color-focus': '#1f2a4d',
+      '--calendar-heat-0': '#f7f4ef',
+      '--calendar-heat-1': '#fbe3d6',
+      '--calendar-heat-2': '#f6bea6',
+      '--calendar-heat-3': '#ef8f70',
+      '--calendar-heat-4': '#e8573c',
+      '--calendar-on-heat-0': '#1f2a4d',
+      '--calendar-on-heat-1': '#1f2a4d',
+      '--calendar-on-heat-2': '#1f2a4d',
+      '--calendar-on-heat-3': '#1f2a4d',
+      '--calendar-on-heat-4': '#1a0f0c',
+      '--calendar-mark': '#4f6d8f',
+      '--calendar-chain': '#dfe5f0',
     },
     dark: {
       '--color-bg': '#1f2a4d',
@@ -45,9 +58,22 @@ export const theme: Theme = {
       '--color-done': '#a8b8d8',
       '--color-on-done': '#1f2a4d',
       '--color-focus': '#ffd9b0',
+      '--calendar-heat-0': '#27335a',
+      '--calendar-heat-1': '#423f6b',
+      '--calendar-heat-2': '#6e4867',
+      '--calendar-heat-3': '#a8524f',
+      '--calendar-heat-4': '#e8573c',
+      '--calendar-on-heat-0': '#f7f4ef',
+      '--calendar-on-heat-1': '#f7f4ef',
+      '--calendar-on-heat-2': '#f7f4ef',
+      '--calendar-on-heat-3': '#ffffff',
+      '--calendar-on-heat-4': '#1a0f0c',
+      '--calendar-mark': '#a8b8d8',
+      '--calendar-chain': '#303d68',
     },
   },
   HabitScene: MountainScene,
+  CalendarDayMark: TrailDayMark,
   TaskIllustration: TaskObstacle,
   GoalScene: GoalSummitScene,
   followsAmbiance: true,

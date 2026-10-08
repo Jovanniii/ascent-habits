@@ -11,7 +11,7 @@
  * progress.ts et le moteur, jamais le registre ni src/themes/index.ts.
  */
 import type { ComponentType } from 'react'
-import type { GoalProgress } from '../engine/index.ts'
+import type { ChainMark, GoalProgress, HabitDayState } from '../engine/index.ts'
 import type { HabitProgress } from './progress.ts'
 
 /** Variables CSS appliquées à la racine du document (ex. « --color-bg »). */
@@ -33,6 +33,15 @@ export interface HabitSceneProps {
   motionAllowed: boolean
   /** Rang de l'habitude dans la liste, pour décaler les boucles d'animation. */
   index: number
+}
+
+/** Données neutres transmises au décor d'un jour du calendrier (vue par habitude). */
+export interface CalendarDayMarkProps {
+  state: HabitDayState
+  /** Position du jour dans une chaîne de série, ou null. */
+  chain: ChainMark | null
+  /** Jour non validé à l'intérieur d'une chaîne (non prévu ou en pause). */
+  bridge: boolean
 }
 
 /** Données neutres transmises à l'illustration d'une tâche à faire. */
@@ -63,12 +72,23 @@ export interface Theme {
   name: string
   /** Thème proposé aux nouvelles installations (un seul thème par défaut). */
   isDefault?: boolean
+  /**
+   * Jetons de couleur, communs à tous les thèmes. Le calendrier utilise en plus
+   * `--calendar-heat-0` à `--calendar-heat-4` (carte de chaleur) avec leurs couleurs
+   * de texte `--calendar-on-heat-*`, `--calendar-mark` (symboles) et
+   * `--calendar-chain` (bande des séries).
+   */
   tokens: {
     light: ThemeTokens
     dark: ThemeTokens
   }
   /** Illustration décorative d'une habitude du jour, affichée dans le bouton de coche. */
   HabitScene?: ComponentType<HabitSceneProps>
+  /**
+   * Décor d'un jour du calendrier (symbole et chaîne de série), décoratif. Sans lui,
+   * l'interface dessine des symboles simples avec les jetons du thème.
+   */
+  CalendarDayMark?: ComponentType<CalendarDayMarkProps>
   /** Illustration décorative d'une tâche à faire, affichée à côté de sa case à cocher. */
   TaskIllustration?: ComponentType<TaskIllustrationProps>
   /** Scène décorative d'un objectif, affichée au-dessus de sa progression et de ses jalons. */

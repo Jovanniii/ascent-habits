@@ -5,7 +5,7 @@ La gamification est un décor agréable, sans pression ni message culpabilisant.
 
 Projet de portfolio product manager. Voir [docs/](docs/) pour la vision, le backlog, la direction artistique et le [journal de décisions](docs/journal-decisions.md).
 
-> Itération 2 : thème montagne avec des visuels provisoires (formes SVG simples), en plus du thème « Sobre ».
+> Itération 3 : calendrier de réalisations (vue globale en carte de chaleur et vue par habitude), en plus du thème montagne provisoire et du thème « Sobre ».
 
 ## Fonctionnalités actuelles
 
@@ -17,6 +17,10 @@ Projet de portfolio product manager. Voir [docs/](docs/) pour la vision, le back
   - récupération d'un jour manqué, limitée à une par semaine ;
   - pause, archivage.
 - **Tâches** : ajout avec échéance facultative, coche, historique.
+- **Calendrier** :
+  - vue globale : carte de chaleur selon la part des habitudes prévues validées, détail d'un jour (habitudes, tâches terminées) ;
+  - vue par habitude : jours validés, rattrapés ou notés après coup, séries mises en évidence, série actuelle et meilleure série ;
+  - un jour passé peut être noté « fait après coup », sans effet sur la série ni sur le quota de rattrapage.
 - **Objectifs** : jalons ajoutables, modifiables et supprimables à tout moment, progression recalculée, action « Marquer comme atteint ».
 - **Réglages** :
   - activation ou désactivation des animations ;
@@ -64,11 +68,11 @@ src/
   - Il ne dépend ni de React, ni du stockage, ni des thèmes, ni des API du navigateur. Une règle ESLint le vérifie.
   - Il ne contient aucune référence au thème montagne. Un test le vérifie.
 - **Logique métier :**
-  - Les séries, la récupération, les paliers et la progression des objectifs sont des fonctions pures testées.
+  - Les séries, la récupération, les paliers, le calendrier et la progression des objectifs sont des fonctions pures testées.
   - Chaque action de l'interface est une commande pure `(données, entrée, contexte) => données`. L'heure et la génération d'identifiants sont injectées par le contexte.
 - **Réglages métier :** la limite de récupération et les paliers sont des constantes de `src/engine/config.ts`.
 - **Thèmes :**
-  - Un thème est un dossier `src/themes/<id>/` qui exporte `theme` depuis `theme.ts` : jetons de couleur et, s'il le souhaite, une illustration décorative des habitudes.
+  - Un thème est un dossier `src/themes/<id>/` qui exporte `theme` depuis `theme.ts` : jetons de couleur (dont ceux du calendrier) et, s'il le souhaite, une illustration décorative des habitudes et un décor des jours du calendrier.
   - L'interface garde le bouton de coche et tous les textes ; le thème ne fournit que du décor.
   - Aucune référence à la montagne en dehors de `src/themes/mountain/` (vérifié par un test), et dépendances entre modules contrôlées par ESLint.
 - **Stockage :** l'interface `AppRepository` est asynchrone. Un backend ou IndexedDB pourra remplacer le localStorage en v2 sans toucher au reste.

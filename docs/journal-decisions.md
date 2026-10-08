@@ -255,6 +255,81 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 
 ---
 
+## Itération 3 : calendrier de réalisations (octobre 2026)
+
+### D25. Jour fait en retard sans série à sauver : « Noter comme fait », hors série
+
+- **Contexte :** depuis D10, un jour fait en retard alors qu'il n'y a aucune série à sauver ne pouvait être enregistré nulle part. Le calendrier rend ces trous visibles.
+- **Décision (option B, choisie par Victor) :**
+  - Depuis le calendrier, un jour **passé et prévu**, non validé, peut être noté « fait après coup ». Aucune limite dans le temps (de la création de l'habitude jusqu'à hier). C'est réversible (« Retirer »).
+  - **Séries :** aucun effet. Le jour ne compte ni dans la série actuelle, ni dans la meilleure série, ni dans les paliers, ni dans la position du personnage. Il coupe une chaîne de série comme un jour non validé.
+  - **Quota de rattrapage :** non consommé. Un jour noté après coup n'ouvre pas non plus de rattrapage pour le jour suivant (sinon, noter mardi rendrait mercredi rattrapable et ressusciterait une série cassée).
+  - **Priorité au rattrapage :** si le jour peut être rattrapé au sens de D2 et D10, le calendrier propose « Rattraper ce jour » (avec son quota) et la commande refuse de le noter après coup. Quand la limite de la semaine est atteinte, « Noter comme fait » reste possible.
+  - **Carte de chaleur :** le jour compte comme fait (c'est un vrai accomplissement), et il est listé à part dans le détail du jour.
+  - **Modèle :** nouvelle valeur `CompletionKind = 'late'`. Simple ajout : les données existantes restent valides, sans nouvelle version du schéma ni migration.
+- **Alternatives écartées :**
+  - **A. Statu quo** (le calendrier montre le trou, sans action) : l'historique restait faux par omission, à l'opposé de l'objectif de fierté du calendrier.
+  - **C. Rattrapage élargi** (tout jour des 7 derniers jours, compté dans la série, avec le quota) : remettait en cause D2 et D10, rendait les séries « reconstructibles » après coup et consommait le quota pour remplir l'historique.
+- **Raison :** un historique fidèle, sans faille dans les séries ; la règle « le rattrapage sert à sauver une série » (D10) reste vraie et simple.
+- **Modifications du moteur (annoncées avant d'être faites) :**
+  - `model.ts` : valeur `'late'` ;
+  - `habits/schedule.ts` : `countsForStreak`, et `validatedDates` ignore les jours `late` (donc `computeStreak` aussi) ;
+  - `habits/recovery.ts` : le jour précédant un jour manqué doit compter dans la série pour ouvrir un rattrapage ;
+  - `commands/habits.ts` : commandes `logLateDay` et `removeLateDay` ;
+  - hors moteur : `storage/validation.ts` accepte `'late'`, `themes/progress.ts` ne compte pas ces jours pour la pose du personnage.
+- **À vérifier en bêta :** un jour visiblement « fait » qui ne prolonge pas la série surprend-il ?
+
+### D26. États d'un jour pour une habitude
+
+- **Décision :** `getHabitDayState` renvoie, par ordre de priorité : à venir, avant la création, validé / rattrapé / fait après coup, validé hors programme, en pause, non prévu, à faire (aujourd'hui), non validé.
+  - Une validation tombée sur un jour qui n'est plus prévu (après un changement de fréquence, D5) s'affiche « validé, jour non prévu » : elle reste visible, mais hors chaîne et hors carte de chaleur, comme pour la série.
+  - Aujourd'hui non validé est « à faire », jamais « non validé ».
+  - Aucun libellé négatif : « non validé », jamais « manqué » ni « raté ». Un test d'interface vérifie l'absence de ces mots.
+- **Alternative écartée :** masquer les validations hors programme. Elles correspondent à un effort réel.
+- **Raison :** cohérence avec le calcul de la série, sans rien cacher de ce qui a été fait.
+
+### D27. Carte de chaleur : part des habitudes prévues, par tiers
+
+- **Décision :**
+  - L'intensité dépend de la **part** des habitudes prévues ce jour-là qui sont validées (normalement, par rattrapage ou après coup), et non de leur nombre.
+  - Niveaux : 0 = aucune ; 1 = moins d'un tiers ; 2 = moins de deux tiers ; 3 = au moins deux tiers sans être toutes ; 4 = toutes. Un jour sans habitude prévue n'a pas de niveau (case en pointillés), distinct du niveau 0.
+  - Chaque case affiche aussi la fraction (« 2/3 ») : l'information ne repose pas sur la couleur.
+- **Alternatives écartées :**
+  - Le nombre d'habitudes validées (Doc 07 §7) : un jour parfait avec deux habitudes paraîtrait moins intense qu'un jour partiel avec cinq.
+  - Des quarts : avec deux ou trois habitudes, les niveaux 1 et 3 n'apparaissaient presque jamais.
+- **Raison :** un mois « rempli » se lit d'un coup d'œil, quel que soit le nombre d'habitudes.
+
+### D28. Séries mises en évidence
+
+- **Décision :** les chaînes de séries suivent exactement les règles de `computeStreak` (un jour non prévu ou en pause ne coupe pas, aujourd'hui en attente non plus, un jour noté après coup si). Elles sont calculées sur tout l'historique : une série commencée le mois précédent reste continue. Les jours non prévus à l'intérieur d'une chaîne sont des « ponts ».
+- **Alternative écartée :** calculer les chaînes mois par mois, ce qui coupait les séries au 1er du mois.
+- **Raison :** la plus longue chaîne affichée est égale à la meilleure série (testé).
+
+### D29. Contrat de thème étendu, accent dans la carte de chaleur
+
+- **Décision :**
+  - Chaque thème déclare les jetons du calendrier : 5 niveaux de chaleur et leurs couleurs de texte, la couleur des symboles et celle de la bande de série. Contrastes AA vérifiés par test, pour chaque thème, en clair et en sombre.
+  - Un thème peut fournir un décor de case (`CalendarDayMark`, décoratif, `aria-hidden`) à partir de données neutres (état, position dans la chaîne, pont). Sans lui, l'interface dessine des symboles simples (thème Sobre). L'interface garde les boutons, les textes et l'ARIA (D20).
+  - Montagne : tampon à petit sommet (validé), pont de corde (rattrapé), crayon dans un tampon en pointillés (fait après coup), tente au repos (non validé), lune (pause), crêtes sous les séries ; carte de chaleur du blanc neige à l'accent rouge orangé.
+  - **Élargissement de D24 :** l'accent est utilisé pour le niveau « toutes validées » de la carte de chaleur, comme le prévoit le Doc 07 §7. Le texte posé dessus est presque noir (contraste d'au moins 4,5:1).
+- **Alternatives écartées :** confier toute la grille au thème (accessibilité à refaire dans chaque thème) ; un symbole de pied pour « validé » (il ressemblait à un point d'exclamation).
+- **Raison :** même accessibilité dans tous les thèmes, et un rendu « carnet de randonnée » pour la montagne.
+
+### D30. Navigation et accessibilité de la grille
+
+- **Décision :**
+  - Grille ARIA à une seule case dans l'ordre de tabulation : flèches (y compris d'un mois à l'autre), Début / Fin (semaine), Page précédente / Page suivante (mois), Entrée ou Espace pour afficher le détail.
+  - Libellé complet par case, par exemple « 2 octobre : Lire validée, Méditer non validée, 1 tâche terminée » ou « 1er octobre : validé, série de 3 validations ».
+  - Navigation bornée : du premier mois qui a une donnée (création d'une habitude ou tâche terminée) au mois en cours.
+  - Le détail s'affiche sous la grille (pas de fenêtre), et le jour sélectionné par défaut est aujourd'hui.
+  - Cases d'au moins 44 × 48 px en 360 px de large (marges latérales réduites à 12 px sur ce seul écran) ; un mois de 5 semaines tient en entier en 360 × 640.
+  - Les tâches terminées sont rattachées au jour local de l'appareil où elles ont été cochées.
+- **Alternative écartée :** une fenêtre de détail, qui masquait la grille et demandait un geste de plus pour passer d'un jour à l'autre.
+- **Raison :** consultation rapide au pouce comme au clavier.
+- **Reportés :** animation au remplissage du mois, décor de thème sur la carte de chaleur, annulation d'un rattrapage depuis le calendrier (elle reste sur « Aujourd'hui »), partage d'un mois en image.
+
+---
+
 ## Décisions techniques de l'itération 1
 
 | Décision | Raison | Alternatives écartées |

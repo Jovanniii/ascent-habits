@@ -70,8 +70,13 @@ export interface Milestone {
   createdAt: Timestamp
 }
 
-/** `recovery` : jour manqué validé après coup grâce à la récupération. */
-export type CompletionKind = 'normal' | 'recovery'
+/**
+ * - `normal` : validation du jour même.
+ * - `recovery` : jour manqué validé après coup grâce à la récupération ; compte dans la série.
+ * - `late` : jour passé noté « fait après coup » depuis le calendrier ; il figure dans
+ *   l'historique mais ne compte ni dans la série, ni dans les paliers, ni dans le quota.
+ */
+export type CompletionKind = 'normal' | 'recovery' | 'late'
 
 /** Validation d'une habitude pour un jour donné (au plus une par habitude et par jour). */
 export interface Completion {
