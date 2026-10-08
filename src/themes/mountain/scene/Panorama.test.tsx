@@ -55,7 +55,7 @@ describe('Panorama', () => {
     const mountains = root.querySelectorAll('.mountain-panorama__mountain')
     expect([...mountains].map((m) => m.getAttribute('data-habit'))).toEqual(['a', 'b', 'c'])
     expect(root.querySelectorAll('.mountain-panorama__climber')).toHaveLength(3)
-    expect(root.querySelector('[data-habit="c"] .mountain-scene__resting')).not.toBeNull()
+    expect(root.querySelector('[data-habit="c"] .mountain-scene__figure.is-tent')).not.toBeNull()
     expect([...root.querySelectorAll('.mountain-panorama__label text')].map((t) => t.textContent)).toEqual([
       'Habitude a',
       'Habitude b',
@@ -135,12 +135,13 @@ describe('scène du jour et ambiance', () => {
     expect(svg.querySelector('.mountain-sky__stars')).toHaveAttribute('data-twinkle', 'false')
   })
 
-  it('dessine les formes provisoires tant qu’aucune illustration n’est livrée', () => {
+  // Le repli sur les formes provisoires est testé dans assets/assets.test.tsx.
+  it('affiche les illustrations livrées dans la lumière du moment', () => {
     const { container } = render(<MountainScene progress={habit('a').progress} gesture={null} motionAllowed index={0} />)
     expect(container.querySelector('svg')).toHaveAttribute('data-ambiance', 'day')
-    expect(container.querySelector('.mountain-scene__far')).not.toBeNull()
-    expect(container.querySelector('.mountain-scene__mid')).not.toBeNull()
-    expect(container.querySelector('.mountain-scene__figure.is-rest')).not.toBeNull()
+    expect(container.querySelector('[data-asset="plane-1-day"]')).not.toBeNull()
+    expect(container.querySelector('[data-asset="plane-2-day"]')).not.toBeNull()
+    expect(container.querySelector('.mountain-scene__figure.is-rest [data-asset="climber-rest"]')).not.toBeNull()
   })
 
   it('habille aussi le sommet d’objectif selon l’ambiance', () => {

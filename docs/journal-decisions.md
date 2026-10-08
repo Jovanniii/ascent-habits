@@ -552,3 +552,22 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 
 - **Décision :** les calculs sont des fonctions pures testées par Vitest ; le script `scripts/analyse-stats.ts` ne fait que lire le dossier et afficher le tableau Markdown. Il tourne avec Node 22 seul (exécution native de TypeScript), sans `tsx` ni `ts-node`.
 - **Raison :** aucune dépendance de plus, et le calcul des indicateurs est couvert par les tests.
+
+## Piste 5c : illustrations du thème montagne
+
+### P5c-D1. Illustrations dessinées dans le dépôt, à défaut de visuels fournis
+
+- **Décision :** aucun visuel n'ayant été produit, les 31 illustrations du manifeste sont dessinées en SVG à la main (formes arrondies, aplats, palette du Doc 07), puis passées par `npm run assets:optimize`. Les plans de montagnes reprennent la silhouette et la hauteur des chaînes provisoires (sommets entre y = 54 et 94 dans le repère 1280 × 120) pour ne pas cacher la montagne de l'habitude.
+- **Alignement sur le brief (`docs/brief-assets.md`, PR #8) :** noms, viewBox, ancrages et poids visés respectés (le plus lourd : 1,7 Ko) ; bords gauche et droit des plans à la même hauteur ; tente : alpiniste assis devant, tasse à la main ; sommet d'objectif aux couleurs du plan lointain. Les images clés d'animation (section 5.2 du brief) ne sont pas produites : elles ne sont pas encore au manifeste.
+- **Alternatives écartées :** attendre une livraison (rien de prévu) ; générer des images bitmap (refusées par le pipeline).
+- **Raison :** l'application gagne un vrai habillage sans toucher à la logique ; chaque fichier peut être remplacé plus tard par un visuel d'illustrateur, au même nom.
+
+### P5c-D2. Obstacles et icônes de calendrier en clair et en sombre dans le fichier
+
+- **Décision :** les obstacles de tâche portent leurs couleurs claires et sombres dans un `<style>` interne avec `@media (prefers-color-scheme: dark)`, mêmes valeurs que `tasks.css`. Les plans existent en trois lumières (jour, soir, nuit) comme prévu ; l'alpiniste, la flamme, le camp, les fanions et les drapeaux sont posés sur leur halo et gardent les mêmes couleurs partout.
+- **Raison :** une image SVG ne reçoit pas les variables CSS de la page.
+
+### P5c-D3. L'illustration reçoit la classe de la forme provisoire
+
+- **Décision :** `SceneAsset` accepte une `className` posée sur l'image ; l'obstacle de tâche lui passe `task-obstacle__shape`, ce qui garde l'animation de disparition (roulé, envol, balancement, glissement) avec l'illustration.
+- **Raison :** sans elle, un obstacle illustré ne jouait pas son animation de disparition à la coche.
