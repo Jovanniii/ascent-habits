@@ -17,9 +17,14 @@ interface Props {
   children?: ReactNode
   /** Fichiers disponibles (tests). */
   available?: AvailableAssets
+  /**
+   * Classe posée sur l'illustration, pour qu'elle reçoive les mêmes animations
+   * que la forme provisoire (ex. disparition d'un obstacle de tâche).
+   */
+  className?: string
 }
 
-export function SceneAsset({ id, x, y, width, height, children = null, available }: Props) {
+export function SceneAsset({ id, x, y, width, height, children = null, available, className }: Props) {
   const url = resolveAsset(id, available)
   // Échec mémorisé par adresse : une autre variante (lumière, état) retente le chargement.
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
@@ -32,6 +37,7 @@ export function SceneAsset({ id, x, y, width, height, children = null, available
       width={width}
       height={height}
       preserveAspectRatio="xMidYMax meet"
+      className={className}
       data-asset={id}
       onError={() => setFailedUrl(url)}
     />

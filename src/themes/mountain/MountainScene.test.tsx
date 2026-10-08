@@ -67,7 +67,7 @@ describe('MountainScene', () => {
 
   it('montre la tente pour un jour manqué, sans flamme', () => {
     const svg = scene(props({ bestDurationDays: 30, previousBestDurationDays: 30, lastScheduledDay: 'missed' }))
-    expect(svg.querySelector('.mountain-scene__resting')).not.toBeNull()
+    expect(svg.querySelector('.mountain-scene__figure.is-tent')).not.toBeNull()
     expect(svg.querySelector('.mountain-scene__flame')).toBeNull()
   })
 

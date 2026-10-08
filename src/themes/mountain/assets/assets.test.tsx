@@ -80,6 +80,15 @@ describe('repli quand une illustration manque', () => {
     expect(container.querySelector('image')).toBeNull()
     expect(container.querySelector('.provisional')).not.toBeNull()
   })
+
+  it('pose la classe demandée sur l’illustration (mêmes animations que la forme provisoire)', () => {
+    const { container } = render(
+      <svg>
+        <SceneAsset id="camp" x={0} y={0} width={12} height={12} available={available} className="task-obstacle__shape" />
+      </svg>,
+    )
+    expect(container.querySelector('image')).toHaveClass('task-obstacle__shape')
+  })
 })
 
 describe('illustrations livrées', () => {
