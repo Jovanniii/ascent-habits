@@ -4,7 +4,7 @@
 import { expect, type Download, type Page } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 
-export type TabName = 'Aujourd’hui' | 'Tâches' | 'Objectifs' | 'Réglages'
+export type TabName = 'Aujourd’hui' | 'Tâches' | 'Objectifs' | 'Calendrier' | 'Réglages'
 
 /** Ouvre l'application sur un appareil neuf (aucune donnée enregistrée). */
 export async function openFreshApp(page: Page): Promise<void> {

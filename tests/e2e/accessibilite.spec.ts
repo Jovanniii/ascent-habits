@@ -22,7 +22,7 @@ async function expectNoViolations(page: Page, label: string): Promise<void> {
   expect(summary, `Problèmes d'accessibilité sur « ${label} »`).toEqual([])
 }
 
-const SCREENS: TabName[] = ['Aujourd’hui', 'Tâches', 'Objectifs', 'Réglages']
+const SCREENS: TabName[] = ['Aujourd’hui', 'Tâches', 'Objectifs', 'Calendrier', 'Réglages']
 const THEMES = [
   { id: 'mountain', label: 'Montagne' },
   { id: 'plain', label: 'Sobre' },
