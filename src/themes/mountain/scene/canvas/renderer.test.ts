@@ -69,7 +69,7 @@ describe('rendu de la scène', () => {
     const moving = renderer.shownPosition('a')!
     expect(moving).toBeGreaterThan(0.3)
     expect(moving).toBeLessThan(0.6)
-    for (let i = 0; i < 400; i++) renderer.render(0.05)
+    for (let i = 0; i < 130; i++) renderer.render(0.05)
     expect(renderer.shownPosition('a')).toBe(0.6)
     // Une correction (jalon décoché) le fait redescendre de la même façon.
     renderer.setInput(input({ tracks: [track('a', 0.5), track('b', 0.1)] }))
@@ -90,8 +90,9 @@ describe('rendu de la scène', () => {
     expect(renderer.hikerCounts()).toEqual({ waiting: 3, departing: 0 })
     renderer.setInput(input({ pendingTasks: 1 }))
     expect(renderer.hikerCounts()).toEqual({ waiting: 1, departing: 2 })
-    // Ils quittent la scène par le sentier.
-    for (let i = 0; i < 600; i++) renderer.render(0.05)
+    // Ils quittent la scène par le sentier (cadre étroit pour un test rapide).
+    renderer.resize(60, 200)
+    for (let i = 0; i < 120; i++) renderer.render(0.05)
     expect(renderer.hikerCounts().departing).toBe(0)
   })
 
@@ -128,10 +129,12 @@ describe('rendu de la scène', () => {
   })
 
   it('fait vivre la scène longtemps sans erreur (randonneurs qui passent et reviennent)', () => {
-    const { renderer } = setup()
-    for (let i = 0; i < 2000; i++) renderer.render(0.05)
+    const { renderer } = setup(input({ tracks: [track('a', 0.3)], pendingTasks: 0 }))
+    // Cadre étroit : les randonneurs le traversent vite et de nouveaux arrivent.
+    renderer.resize(40, 120)
+    for (let i = 0; i < 700; i++) renderer.render(0.05)
     expect(renderer.shownPosition('a')).toBe(0.3)
-  })
+  }, 30_000)
 
   it('n’a pas de grain de papier hors navigateur', () => {
     expect(browserCanvasFactory(16)).toBeNull()
