@@ -10,6 +10,7 @@ Le thème visuel du MVP est la montagne. D'autres thèmes viendront plus tard : 
 - docs/01-probleme-vision.md
 - docs/06-backlog-mvp.md (user stories, priorités M/S/C/W)
 - docs/07-direction-artistique-montagne.md
+- docs/08-scene-cordee.md (direction artistique validée, prototype dans docs/prototypes/cordee-scene.html ; prime sur le Doc 07 en cas de conflit)
 
 ## Stack
 React + TypeScript + Vite, PWA installable, stockage local (IndexedDB ou localStorage via une couche d'abstraction), aucun backend au MVP, déploiement sur GitHub Pages. Tests avec Vitest.

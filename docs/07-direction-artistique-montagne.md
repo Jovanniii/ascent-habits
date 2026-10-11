@@ -1,4 +1,5 @@
 Doc 07 : Fiche de direction artistique, thème Montagne
+> Mise à jour du 11 octobre 2026 : la direction artistique validée est décrite dans le Doc 08 (docs/08-scene-cordee.md). Ses choix priment sur ce document en cas de conflit, notamment pour la composition de la scène (section 5).
 1. Intention
 Une montagne douce et lumineuse qui donne envie d'avancer pas à pas. Ambiance contemplative, jamais dramatique : l'alpinisme comme une promenade inspirante, pas comme une épreuve.
 2. Principes (garde-fous)
