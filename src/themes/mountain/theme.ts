@@ -4,10 +4,12 @@ import { TrailDayMark } from './TrailDayMark.tsx'
 import { GoalSummitScene } from './goals/GoalSummitScene.tsx'
 import { TaskObstacle } from './tasks/TaskObstacle.tsx'
 import { Panorama } from './scene/Panorama.tsx'
+import { CordeeScene } from './scene/canvas/CordeeScene.tsx'
 import './mountain.css'
 import './tokens.css'
 import './tasks/tasks.css'
 import './goals/goals.css'
+import './scene/canvas/cordee.css'
 
 /**
  * Thème montagne, visuels provisoires (formes SVG simples). Palette du Doc 07 :
@@ -78,4 +80,5 @@ export const theme: Theme = {
   GoalScene: GoalSummitScene,
   followsAmbiance: true,
   Panorama,
+  Scene: CordeeScene,
 }

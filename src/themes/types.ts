@@ -97,6 +97,12 @@ export interface Theme {
   followsAmbiance?: boolean
   /** Vue d'ensemble décorative de toutes les habitudes, en lecture seule (écran « Panorama »). */
   Panorama?: ComponentType<PanoramaProps>
+  /**
+   * Grand décor vivant de toutes les habitudes, objectifs et tâches du jour, décoratif.
+   * S'il existe, il remplace `Panorama` dans l'écran « Panorama » et s'affiche aussi en
+   * bandeau en haut de « Aujourd'hui ».
+   */
+  Scene?: ComponentType<SceneProps>
 }
 
 /** Une habitude dans la vue d'ensemble : seulement des données neutres. */
@@ -110,6 +116,38 @@ export interface PanoramaHabit {
 /** Données neutres transmises à la vue d'ensemble (décorative, sans interaction). */
 export interface PanoramaProps {
   habits: readonly PanoramaHabit[]
+  /** Faux si le réglage de l'application ou celui de l'appareil réduit les animations. */
+  motionAllowed: boolean
+}
+
+/** Une habitude dans le grand décor. */
+export interface SceneHabit {
+  id: string
+  label: string
+  progress: HabitProgress
+  /** Habitude en pause : son personnage se repose. */
+  paused: boolean
+}
+
+/** Un objectif en cours dans le grand décor. */
+export interface SceneGoal {
+  id: string
+  label: string
+  /** Jalons terminés et total, calculés par le moteur. */
+  progress: GoalProgress
+  achieved: boolean
+}
+
+/** Données neutres transmises au grand décor (décoratif, sans interaction). */
+export interface SceneProps {
+  habits: readonly SceneHabit[]
+  goals: readonly SceneGoal[]
+  /** Nombre de tâches à faire aujourd'hui (en retard comprises). */
+  pendingTasks: number
+  /** Heure locale affichée, en heures décimales de 0 à 24 (16,5 = 16 h 30). */
+  hour: number
+  /** « banner » : bandeau en haut d'Aujourd'hui ; « full » : écran Panorama. */
+  variant: 'banner' | 'full'
   /** Faux si le réglage de l'application ou celui de l'appareil réduit les animations. */
   motionAllowed: boolean
 }

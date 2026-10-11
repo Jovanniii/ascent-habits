@@ -7,10 +7,17 @@ import { HabitForm, type HabitFormValues } from '../components/HabitForm.tsx'
 import { TaskItem } from '../components/TaskItem.tsx'
 import { capitalize, formatLongDate } from '../format.ts'
 import { useAppStore } from '../state/store.ts'
+import { useDecorHour } from '../state/useDecorHour.ts'
+import { useMotionAllowed } from '../state/useMotionAllowed.ts'
+import { useSceneData } from '../state/useSceneData.ts'
 import { PanoramaScreen } from './PanoramaScreen.tsx'
 
 export function TodayScreen() {
-  const { data, today, run } = useAppStore()
+  const { data, today, run, now } = useAppStore()
+  const theme = getTheme(data.settings.themeId)
+  const scene = useSceneData(data, today)
+  const hour = useDecorHour(now)
+  const { allowed: motionAllowed } = useMotionAllowed(data.settings.animationsEnabled)
   const [creating, setCreating] = useState(false)
   const [panorama, setPanorama] = useState(false)
   const panoramaButton = useRef<HTMLButtonElement>(null)
@@ -39,7 +46,9 @@ export function TodayScreen() {
     if (created) setCreating(false)
   }
 
-  const hasPanorama = Boolean(getTheme(data.settings.themeId).Panorama) && data.habits.some((h) => h.status !== 'archived')
+  const Scene = theme.Scene
+  const hasSceneContent = scene.habits.length > 0 || scene.goals.length > 0
+  const hasPanorama = Scene ? hasSceneContent : Boolean(theme.Panorama) && scene.habits.length > 0
   if (panorama) {
     return (
       <PanoramaScreen
@@ -62,6 +71,17 @@ export function TodayScreen() {
         )}
         <p className="screen__subtitle">{capitalize(formatLongDate(today))}</p>
       </header>
+
+      {Scene && hasSceneContent && (
+        <Scene
+          habits={scene.habits}
+          goals={scene.goals}
+          pendingTasks={scene.pendingTasks}
+          hour={hour}
+          variant="banner"
+          motionAllowed={motionAllowed}
+        />
+      )}
 
       {data.habits.length === 0 ? (
         <div className="card empty">
