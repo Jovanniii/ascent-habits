@@ -598,3 +598,10 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 
 - **Décision :** nouvel emplacement facultatif `Theme.Scene` (ajout seul dans `src/themes/types.ts`). Il s'affiche en bandeau en haut d'« Aujourd'hui » dès qu'il existe une habitude ou un objectif, et en plein écran dans « Panorama », qu'il remplace. Le bouton « Panorama » apparaît aussi avec seulement un objectif en cours. Un thème sans `Scene` garde l'ancien `Panorama` (aucune fonctionnalité supprimée).
 - **Raison :** demande de Victor (« les deux »).
+
+### DA-D8. Mise à jour automatique de l'application installée
+
+- **Décision :** le service worker est enregistré par `registerSW` (`src/main.tsx`) : quand une nouvelle version est publiée, elle est téléchargée puis la page se recharge d'elle-même. Une appli restée ouverte vérifie la présence d'une nouvelle version toutes les heures.
+- **Alternative écartée :** script d'enregistrement injecté par défaut, qui activait la nouvelle version sans recharger la page : l'ancienne restait affichée jusqu'à une deuxième ouverture.
+- **Raison :** Victor ne voyait pas les nouveautés après une mise en ligne.
+- **Coût :** +3 Ko de JavaScript compressé (budget respecté).
