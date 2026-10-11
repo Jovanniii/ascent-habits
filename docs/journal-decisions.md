@@ -552,3 +552,24 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 
 - **Décision :** les calculs sont des fonctions pures testées par Vitest ; le script `scripts/analyse-stats.ts` ne fait que lire le dossier et afficher le tableau Markdown. Il tourne avec Node 22 seul (exécution native de TypeScript), sans `tsx` ni `ts-node`.
 - **Raison :** aucune dépendance de plus, et le calcul des indicateurs est couvert par les tests.
+
+## Piste DA : scène « Cordée » (octobre 2026)
+
+### DA-D1. Direction artistique hybride
+
+- **Décision :** la scène suit Alto's Odyssey (ciel en dégradé, plans de montagnes en perspective atmosphérique, jeux de lumière, cycle jour et nuit), en plus chaleureux ; les objets (cabanes, sapins, rochers, personnages) suivent Old Man's Journey, avec matière et détails. Référence : `docs/prototypes/cordee-scene.html` et Doc 08.
+- **Alternatives écartées :** formes géométriques simples en aplats seulement (premiers essais jugés peu esthétiques) ; style Sky: Children of the Light (écarté par Victor).
+- **Raison :** la direction artistique est la valeur ajoutée de l'appli ; le prototype a été validé en l'état.
+
+### DA-D2. Une grande montagne, une voie par habitude et par objectif
+
+- **Décision :** une seule grande montagne porte toutes les voies d'ascension. Chaque habitude a sa voie avec ses paliers (21 j, 2 mois, 6 mois, 1 an) ; chaque objectif a sa voie en tirets, un fanion par jalon. Toutes les voies mènent au même sommet.
+- **Alternatives écartées :** une montagne par habitude côte à côte (Doc 07, panorama P5-D6) ; plusieurs montagnes à escalader (gardée en option si le nombre de voies devient trop grand).
+- **Raison :** une scène unique, lisible d'un coup d'œil, où toutes les progressions se voient ensemble.
+
+### DA-D3. Village vivant au premier plan
+
+- **Décision :** le premier plan est un village fixe (cabanes, sapins, sentier, lanternes) traversé en continu par des randonneurs de passage. Rien ne défile au premier plan ; seuls le ciel, les nuages et les montagnes lointaines bougent.
+- **Alternative écartée :** collines boisées qui défilent devant la montagne (jugées gênantes).
+- **Raison :** donner de la vie à l'image sans détourner l'attention des voies.
+- **À confirmer :** cette vie ambiante revient sur P5-D5 (« une seule animation principale à la fois »). Elle reste entièrement coupée quand les animations sont réduites.
