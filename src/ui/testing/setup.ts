@@ -8,6 +8,9 @@ import { afterEach, vi } from 'vitest'
 // jsdom n'implémente pas le défilement.
 window.scrollTo = vi.fn() as typeof window.scrollTo
 
+// jsdom n'implémente pas le dessin sur canevas : le décor dessiné reste vide.
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
+
 /** Préférence système simulée « réduire les animations », modifiable par les tests. */
 export const reducedMotion = {
   matches: false,

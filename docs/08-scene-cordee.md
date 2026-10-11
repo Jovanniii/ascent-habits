@@ -41,20 +41,37 @@ De l'arrière vers l'avant :
 
 Restent valables : paliers 21 j, 2 mois, 6 mois, 1 an ; aucune culpabilisation ; règle « l'alpiniste ne recule jamais quand on ajoute un jalon » ; cycle jour et nuit.
 
-## 5. Plan d'intégration proposé (à valider)
+## 5. Intégration (11 octobre 2026)
 
-Le prototype est en Canvas 2D, sans asset. Il ne remplace pas directement le code existant (SVG et CSS) : l'intégration se fait par étapes, une branche par étape.
+Réalisée dans `src/themes/mountain/scene/canvas/` :
 
-1. **Moteur de scène Canvas** dans `src/themes/mountain/scene/canvas/` : palettes, bruit, calques, brume, ciel. Logique en fonctions pures testées (interpolation des palettes, géométrie des crêtes et des voies). Composant décoratif `aria-hidden`, l'interface garde tout le texte et l'interactif (P4-D1, P5-D6).
-2. **Voies dynamiques** : génération de N voies sur la grande montagne selon le nombre d'habitudes et d'objectifs. Position des alpinistes calculée par le moteur existant : paliers de `STREAK_TIERS` pour les habitudes, `stepAt` de `goalLayout` pour les objectifs (P4-D2), et non `jalons terminés / total` comme dans le prototype.
-3. **Village et randonneurs**, entièrement coupés si `useMotionAllowed` renvoie faux.
-4. **Remplacement des objets dessinés** (cabanes, sapins, alpinistes) par des illustrations peintes, via le pipeline d'assets existant (`docs/pipeline-assets.md`).
-5. **Mesure** : budget de performance (`npm run check:budget`), fluidité sur téléphone d'entrée de gamme, test utilisateur (« Est-ce que ça te donne envie de cocher ? »).
+- `sky.ts` : lumière en dégradé continu selon l'heure (moments clés de minuit à minuit).
+- `layout.ts`, `routes.ts` : géométrie de la scène et des voies, sans limite de nombre.
+- `tracks.ts` : traduction des habitudes (paliers) et des objectifs (jalons, règle P4-D2) en cordées.
+- `renderer.ts` : rendu Canvas 2D ; les objets (cabanes, sapins, personnages) sont des fonctions isolées, à remplacer plus tard par des illustrations peintes.
+- `CordeeScene.tsx` : composant décoratif (`aria-hidden`), fourni par le thème dans le nouvel emplacement `Theme.Scene`.
 
-## 6. Points à trancher
+Où la scène s'affiche :
 
-- **Où vit la scène** : remplace-t-elle le panorama (P5-D6), s'affiche-t-elle en haut de l'écran « Aujourd'hui », ou les deux ?
-- **Animation ambiante** : accepte-t-on plusieurs mouvements simultanés (nuages, brume, randonneurs), ce qui revient sur P5-D5 ?
-- **Cycle jour et nuit** : dégradé continu selon l'heure réelle, ou conserver les quatre tranches fixes (P5-D2) avec des transitions ?
-- **Nombre de voies** : au-delà de 5 ou 6 voies, la montagne devient chargée. Faut-il une limite, ou une deuxième montagne ?
-- **Tâches** : comment les représenter dans cette scène (obstacles sur les voies, randonneurs du village, autre) ?
+- **En bandeau en haut d'« Aujourd'hui »**, dès qu'il existe une habitude ou un objectif.
+- **En plein écran dans « Panorama »**, avec le curseur « Heure du décor », le bouton « Faire défiler » (une heure par seconde) et « Maintenant » pour revenir à l'heure réelle. Les habitudes, les objectifs en cours et le nombre de tâches du jour sont repris en texte sous le décor.
+
+Animations : nuages, brume, neige, fumée, randonneurs et montée des alpinistes, toutes coupées si l'application ou l'appareil demande de réduire les animations (une image fixe est alors dessinée).
+
+## 6. Les tâches dans la scène
+
+Idées étudiées :
+
+1. **Randonneurs au poteau de départ** (retenue) : chaque tâche du jour est un randonneur qui attend au poteau indicateur du village ; terminer une tâche le fait partir sur le sentier.
+2. Obstacles sur le sentier du village (rochers, congères) que l'on dégage.
+3. Colis de ravitaillement à monter au refuge par un téléphérique.
+4. Lanternes du village qui s'allument une à une.
+5. Mulet chargé de sacs, un sac par tâche, qui part quand tout est fait.
+
+L'idée 1 a été retenue : elle prolonge la vie du village, elle reste lisible avec beaucoup de tâches (au plus 12 randonneurs dessinés) et le départ du randonneur est une petite récompense sans pression.
+
+## 7. Suite
+
+- Remplacer les objets dessinés par des illustrations peintes (cabanes, sapins, alpinistes, randonneurs), via le pipeline d'assets.
+- Mesurer la fluidité sur un téléphone d'entrée de gamme.
+- Test utilisateur : « Est-ce que ça te donne envie de cocher ? ».

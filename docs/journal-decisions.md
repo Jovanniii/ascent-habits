@@ -572,4 +572,29 @@ Les huit points laissés ouverts dans la PR #1 ont été tranchés avec les reco
 - **Décision :** le premier plan est un village fixe (cabanes, sapins, sentier, lanternes) traversé en continu par des randonneurs de passage. Rien ne défile au premier plan ; seuls le ciel, les nuages et les montagnes lointaines bougent.
 - **Alternative écartée :** collines boisées qui défilent devant la montagne (jugées gênantes).
 - **Raison :** donner de la vie à l'image sans détourner l'attention des voies.
-- **À confirmer :** cette vie ambiante revient sur P5-D5 (« une seule animation principale à la fois »). Elle reste entièrement coupée quand les animations sont réduites.
+- **Confirmé par Victor (11 octobre 2026) :** plusieurs animations simultanées sont voulues dans la grande scène (nuages, brume, neige, fumée, randonneurs). Pour cette scène, cela remplace P5-D5. Tout reste coupé quand les animations sont réduites.
+
+### DA-D4. Cycle jour et nuit continu, et curseur pour parcourir la journée
+
+- **Décision :** la grande scène suit l'heure réelle en dégradé continu (moments clés de minuit à minuit, `scene/canvas/sky.ts`), recalculée chaque minute et au retour sur l'application. Le réglage « Ambiance » peut toujours la fixer (13 h pour « Toujours jour », 23 h pour « Toujours nuit »). Dans « Panorama », le curseur « Heure du décor » permet de parcourir la journée, « Faire défiler » l'avance d'une heure par seconde et « Maintenant » revient à l'heure réelle. Ce choix d'heure n'est pas enregistré.
+- **Alternatives écartées :** garder les quatre tranches fixes de P5-D2 (pour cette scène) ; curseur dans les réglages (trop loin du décor).
+- **Raison :** demande de Victor ; les couchers de soleil et l'heure dorée font la valeur de la direction artistique.
+- **Portée :** P5-D2 reste valable pour les petites illustrations des cartes et le thème Sobre.
+
+### DA-D5. Aucune limite au nombre de voies
+
+- **Décision :** autant de voies que d'habitudes en cours ou en pause et d'objectifs en cours. Les départs se répartissent au pied de la montagne et les lacets se resserrent quand les voies sont nombreuses. En plein écran, chaque alpiniste porte une plaque à son nom ; une plaque qui en chevaucherait une autre n'est pas dessinée (le nom complet reste dans la liste sous le décor). Les drapeaux des paliers n'ont pas d'étiquette.
+- **Alternatives écartées :** une limite à 5 ou 6 voies ; une deuxième montagne au-delà (gardée en idée si la lisibilité souffre).
+- **Raison :** demande de Victor (« pas de limite »).
+- **À vérifier :** lisibilité au-delà d'une dizaine de voies sur un petit téléphone.
+
+### DA-D6. Les tâches du jour : des randonneurs au poteau de départ
+
+- **Décision :** chaque tâche du jour (à faire, prévue aujourd'hui ou en retard, même règle que l'écran « Aujourd'hui ») est un randonneur qui attend au poteau indicateur du village, 12 au plus. Quand une tâche est terminée pendant que la scène est visible, un randonneur part sur le sentier. Doc 08, section 6, pour les autres idées.
+- **Alternatives écartées :** obstacles à dégager, téléphérique de ravitaillement, lanternes, mulet (Doc 08, section 6).
+- **Raison :** prolonge la vie du village, lisible, sans pression.
+
+### DA-D7. Emplacement de la scène : bandeau et panorama
+
+- **Décision :** nouvel emplacement facultatif `Theme.Scene` (ajout seul dans `src/themes/types.ts`). Il s'affiche en bandeau en haut d'« Aujourd'hui » dès qu'il existe une habitude ou un objectif, et en plein écran dans « Panorama », qu'il remplace. Le bouton « Panorama » apparaît aussi avec seulement un objectif en cours. Un thème sans `Scene` garde l'ancien `Panorama` (aucune fonctionnalité supprimée).
+- **Raison :** demande de Victor (« les deux »).
